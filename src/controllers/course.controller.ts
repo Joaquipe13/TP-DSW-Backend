@@ -29,7 +29,6 @@ function sanitizeSearchInput(req: Request) {
     title: req.query.title,
   };
 
-  // Eliminar keys indefinidos y sanitizar el título
   Object.keys(queryResult).forEach((key) => {
     if (queryResult[key] === undefined) {
       delete queryResult[key];
