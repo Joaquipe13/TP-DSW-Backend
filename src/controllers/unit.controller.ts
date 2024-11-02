@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import { Unit } from "../entities/unit.entity.js";
 import { orm } from "../shared/orm.js";
-import { validateUnit, validarUnitToPatch } from "../schemas/unit.schema.js";
+import { validateUnit, validateUnitToPatch } from "../schemas/unit.schema.js";
 import { ZodError } from "zod";
 import { EntityManager } from "@mikro-orm/core";
 
@@ -59,10 +59,37 @@ async function add(req: Request, res: Response) {
 async function update(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id);
-    const unitToUpdate = await em.findOneOrFail(Unit, { id });
-    em.assign(unitToUpdate, req.body.sanitizedInput);
+    const unit = em.getReference(Unit, id);
+    let unitUpdated;
+
+    if (req.method === "PATCH") {
+      unitUpdated = validateUnitToPatch(req.body.sanitizedInput);
+      if (unitUpdated.order) {
+        const originalOrder = unit.order;
+        const newOrder = unitUpdated.order;
+        if (originalOrder !== newOrder) {
+          const allUnits = await em.find(Unit, {});
+          if (newOrder > originalOrder) {
+            allUnits.forEach((unit) => {
+              if (unit.order > originalOrder && unit.order <= newOrder) {
+                unit.order -= 1;
+              }
+            });
+          } else if (newOrder < originalOrder) {
+            allUnits.forEach((lvl) => {
+              if (lvl.order < originalOrder && lvl.order >= newOrder) {
+                lvl.order += 1;
+              }
+            });
+          }
+        }
+      }
+    } else {
+      unitUpdated = validateUnit(req.body.sanitizedInput);
+    }
+    em.assign(unitUpdated, req.body.sanitizedInput);
     await em.flush();
-    res.status(200).json({ message: "unit updated", data: unitToUpdate });
+    res.status(200).json({ message: "unit updated", data: unitUpdated });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

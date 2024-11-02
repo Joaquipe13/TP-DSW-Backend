@@ -33,7 +33,7 @@ export const unitToPatch = z.object({
   level: z.number().optional(),
 });
 
-export function validarUnitToPatch(object: any) {
+export function validateUnitToPatch(object: any) {
   try {
     return unitToPatch.parse(object);
   } catch (error: any) {

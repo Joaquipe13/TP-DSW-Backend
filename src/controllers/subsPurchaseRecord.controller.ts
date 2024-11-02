@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import { SubsPurchaseRecord } from '../entities/subsPurchaseRecord.entity.js';
-import { orm } from '../shared/orm.js';
-import { subsPurchaseSchema } from '../schemas/subsPurchase.schema.js';
-import { ZodError } from 'zod';
+import { Request, Response, NextFunction } from "express";
+import { SubsPurchaseRecord } from "../entities/subsPurchaseRecord.entity.js";
+import { orm } from "../shared/orm.js";
+import { subsPurchaseSchema } from "../schemas/subsPurchase.schema.js";
+import { ZodError } from "zod";
 
 const em = orm.em;
 
@@ -30,7 +30,7 @@ async function add(req: Request, res: Response) {
     const subsPurchaseRecord = em.create(SubsPurchaseRecord, parsedData);
     await em.flush();
     res.status(201).json({
-      message: 'Subscription purchase record created',
+      message: "Subscription purchase record created",
       data: subsPurchaseRecord,
     });
   } catch (error: any) {
@@ -45,14 +45,14 @@ async function add(req: Request, res: Response) {
 
 async function findAll(req: Request, res: Response) {
   try {
-    res.json({ message: 'found all subsPurchaseRecords' });
+    res.json({ message: "found all subsPurchaseRecords" });
     const subsPurchaseRecords = await em.find(
       SubsPurchaseRecord,
       {},
-      { populate: ['subscription', 'member'] }
+      { populate: ["subscription", "user"] }
     );
     res.json({
-      message: 'found all subsPurchaseRecords',
+      message: "found all subsPurchaseRecords",
       data: subsPurchaseRecords,
     });
   } catch (error: any) {
@@ -66,11 +66,11 @@ async function findOne(req: Request, res: Response) {
     const subsPurchaseRecord = await em.findOneOrFail(
       SubsPurchaseRecord,
       { id },
-      { populate: ['subscription', 'member'] }
+      { populate: ["subscription", "member"] }
     );
     res
       .status(200)
-      .json({ message: 'found subsPurchaseRecord', data: subsPurchaseRecord });
+      .json({ message: "found subsPurchaseRecord", data: subsPurchaseRecord });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -86,7 +86,7 @@ async function update(req: Request, res: Response) {
     em.assign(subsPurchaseRecordToUpdate, req.body.sanitizedInput);
     await em.flush();
     res.status(200).json({
-      message: 'SubsPurchaseRecord updated',
+      message: "SubsPurchaseRecord updated",
       data: subsPurchaseRecordToUpdate,
     });
   } catch (error: any) {
@@ -99,7 +99,7 @@ async function remove(req: Request, res: Response) {
     const id = Number.parseInt(req.params.id);
     const subsPurchaseRecord = em.getReference(SubsPurchaseRecord, id);
     await em.removeAndFlush(subsPurchaseRecord);
-    res.status(204).json({ message: 'SubsPurchaseRecord deleted' });
+    res.status(204).json({ message: "SubsPurchaseRecord deleted" });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

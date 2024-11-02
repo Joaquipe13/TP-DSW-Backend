@@ -16,7 +16,7 @@ const levelSchema = z.object({
   course: z.number().int().positive().min(1, "Course is required"),
 });
 
-export function validateLevel(object: any) {
+function validateLevel(object: any) {
   try {
     return levelSchema.parse(object);
   } catch (error: any) {
@@ -35,9 +35,10 @@ const levelToPatch = z.object({
     .max(500, "Description must not exceed 500 characters")
     .optional(),
   course: z.number().int().positive().optional(),
+  order: z.number().int().positive().optional(),
 });
 
-export function validarLevelToPatch(object: any) {
+function validateLevelToPatch(object: any) {
   try {
     return levelToPatch.parse(object);
   } catch (error: any) {
@@ -48,3 +49,4 @@ const searchByOrderAndCourseSchema = z.object({
   order: z.number().int().positive(),
   course: z.number().int().positive(),
 });
+export { validateLevel, validateLevelToPatch };

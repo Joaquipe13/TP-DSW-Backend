@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { Level } from "../entities/level.entity.js";
 import { orm } from "../shared/orm.js";
-import { validateLevel, validarLevelToPatch } from "../schemas/level.schema.js";
+import {
+  validateLevel,
+  validateLevelToPatch,
+} from "../schemas/level.schema.js";
 import { ZodError } from "zod";
 import { EntityManager } from "@mikro-orm/core";
 
@@ -89,8 +92,29 @@ async function update(req: Request, res: Response) {
     const id = Number.parseInt(req.params.id);
     const level = em.getReference(Level, id);
     let levelUpdated;
+
     if (req.method === "PATCH") {
-      levelUpdated = validateLevel(req.body.sanitizedInput);
+      levelUpdated = validateLevelToPatch(req.body.sanitizedInput);
+      if (levelUpdated.order) {
+        const originalOrder = level.order;
+        const newOrder = levelUpdated.order;
+        if (originalOrder !== newOrder) {
+          const allLevels = await em.find(Level, {});
+          if (newOrder > originalOrder) {
+            allLevels.forEach((level) => {
+              if (level.order > originalOrder && level.order <= newOrder) {
+                level.order -= 1;
+              }
+            });
+          } else if (newOrder < originalOrder) {
+            allLevels.forEach((lvl) => {
+              if (lvl.order < originalOrder && lvl.order >= newOrder) {
+                lvl.order += 1;
+              }
+            });
+          }
+        }
+      }
     } else {
       levelUpdated = validateLevel(req.body.sanitizedInput);
     }
@@ -106,6 +130,7 @@ async function update(req: Request, res: Response) {
     res.status(500).send({ message: error.message });
   }
 }
+
 async function remove(req: Request, res: Response) {
   await em.transactional(async (em) => {
     try {
