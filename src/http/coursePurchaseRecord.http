@@ -2,7 +2,7 @@
 GET http://localhost:3000/api/coursePurchaseRecords
 
 ### searchabyfechas purchaseRecords
-GET http://localhost:3000/api/coursePurchaseRecords?endDate=2025-11-30
+GET http://localhost:3000/api/coursePurchaseRecords?course=2
 ### create new purchaseRecord
 # @name createPurchaseRecord
 POST http://localhost:3000/api/coursePurchaseRecords
@@ -15,7 +15,7 @@ Content-Type: application/json
 ###ID
 @id = {{createPurchaseRecord.response.body.data.id}} 
 ### get purchaseRecord by id
-GET http://localhost:3000/api/courses/purchaseRecords/{{id}}
+GET http://localhost:3000/api/coursePurchaseRecords/{{id}}
 
 ### Edit/modify purchaseRecord (PUT - recurso completo/objeto con estado final)
 PUT http://localhost:3000/api/courses/purchaseRecords/{{id}}

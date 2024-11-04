@@ -25,7 +25,6 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   });
   next();
 }
-
 async function findAll(req: Request, res: Response) {
   try {
     const validatedQuery = validateSearchByQuery(req.query);

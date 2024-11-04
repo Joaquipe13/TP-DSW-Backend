@@ -12,7 +12,6 @@ function validateCoursePurchaseRecord(object: any) {
     throw error;
   }
 }
-
 const searchByQuerySchema = z
   .object({
     startDate: z
@@ -37,7 +36,7 @@ const searchByQuerySchema = z
           message: "endDate must be a valid date",
         }
       ),
-    course: z.number().optional(),
+    course: z.string().refine((value) => /^\d+$/.test(value)),
   })
   .refine(
     (data) => {
@@ -69,7 +68,10 @@ function validateSearchByQuery(object: any) {
       query.purchaseAt = { $lte: new Date(parsedData.endDate) };
     }
     if (parsedData.course) {
-      query.course = parsedData.course;
+      const courseId = Number(parsedData.course);
+      /*   if (!isNaN(courseId)) {
+        query.course = { id: courseId };
+      } */
     }
 
     return query;
