@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 const userSchema = z.object({
-  dni: z.number().int().positive(),
+  dni: z
+    .string()
+    .length(8, { message: "El DNI debe tener exactamente 8 dígitos" }) // Verifica la longitud
+    .refine((value) => /^\d+$/.test(value), {
+      message: "El DNI debe contener solo números",
+    }),
   name: z.string().min(1, "Name is required"),
   surname: z.string().min(1, "Surname is required"),
   email: z.string().email("Invalid email"),
@@ -10,13 +15,17 @@ const userSchema = z.object({
 });
 
 const userToPatchSchema = z.object({
-  dni: z.number().int().positive().optional(),
+  dni: z
+    .string()
+    .length(8, { message: "El DNI debe tener exactamente 8 dígitos" }) // Verifica la longitud
+    .refine((value) => /^\d+$/.test(value), {
+      message: "El DNI debe contener solo números",
+    })
+    .optional(),
   name: z.string().optional(),
   surname: z.string().optional(),
   email: z.string().optional(),
-  password: z
-    .string()
-    .optional(),
+  password: z.string().optional(),
   admin: z.boolean().default(false).optional(),
 });
 

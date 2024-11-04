@@ -1,15 +1,16 @@
 ### get all purchaseRecords
-GET http://localhost:3000/api/courses/purchaseRecords
+GET http://localhost:3000/api/coursePurchaseRecords
 
+### searchabyfechas purchaseRecords
+GET http://localhost:3000/api/coursePurchaseRecords?endDate=2025-11-30
 ### create new purchaseRecord
 # @name createPurchaseRecord
-POST http://localhost:3000/api/courses/purchaseRecords
+POST http://localhost:3000/api/coursePurchaseRecords
 Content-Type: application/json 
 
 {
-  "totalAmount": 3000,
   "user": 1,
-  "course": 1
+  "course": 2
 }
 ###ID
 @id = {{createPurchaseRecord.response.body.data.id}} 

@@ -4,7 +4,7 @@ import { Course } from "../entities/course.entity.js";
 import { orm } from "../shared/orm.js";
 import {
   validateCoursePurchaseRecord,
-  validateSearchByDateRange,
+  validateSearchByQuery,
 } from "../schemas/coursePurchase.schema.js";
 import { getErrorMap, ZodError } from "zod";
 import { getRandomValues } from "crypto";
@@ -28,23 +28,14 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
 
 async function findAll(req: Request, res: Response) {
   try {
-    const validatedData = validateSearchByDateRange(req.query);
-    const query = validatedData
-      ? {
-          purchaseAt: {
-            $gte: validatedData.startDate
-              ? new Date(validatedData.startDate)
-              : undefined,
-            $lte: validatedData.endDate
-              ? new Date(validatedData.endDate)
-              : undefined,
-          },
-        }
-      : {};
+    const validatedQuery = validateSearchByQuery(req.query);
+
     const coursePurchaseRecords = await em.find(
       CoursePurchaseRecord,
-      query,
-      { populate: ["course", "user"] }
+      validatedQuery,
+      {
+        populate: ["course", "user"],
+      }
     );
     res.json({
       message: "found all coursePurchaseRecords",
@@ -76,7 +67,8 @@ async function add(req: Request, res: Response) {
     const validCoursePurchaseRecord = validateCoursePurchaseRecord(
       req.body.sanitizedInput
     );
-    const course = em.getReference(Course, validCoursePurchaseRecord.course);
+    const courseId = validCoursePurchaseRecord.course;
+    const course = await em.findOneOrFail(Course, courseId);
     const coursePurchaseRecord = em.create(CoursePurchaseRecord, {
       ...validCoursePurchaseRecord,
       totalAmount: course.price,

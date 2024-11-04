@@ -27,11 +27,11 @@ function sanitizedInput(req: Request, res: Response, next: NextFunction) {
 async function add(req: Request, res: Response) {
   try {
     const parsedData = subsPurchaseSchema.parse(req.body.sanitizedInput);
-    const subsPurchaseRecord = em.create(SubsPurchaseRecord, parsedData);
+    //const subsPurchaseRecord = em.create(SubsPurchaseRecord, parsedData);
     await em.flush();
     res.status(201).json({
       message: "Subscription purchase record created",
-      data: subsPurchaseRecord,
+      //data: subsPurchaseRecord,
     });
   } catch (error: any) {
     if (error instanceof ZodError) {
@@ -66,7 +66,7 @@ async function findOne(req: Request, res: Response) {
     const subsPurchaseRecord = await em.findOneOrFail(
       SubsPurchaseRecord,
       { id },
-      { populate: ["subscription", "member"] }
+      { populate: ["subscription", "user"] }
     );
     res
       .status(200)

@@ -1,24 +1,27 @@
 ### get all users
-GET http://localhost:3000/api/members
+GET http://localhost:3000/api/users
 
 ### POST new user
 # @name createUser
-POST http://localhost:3000/api/members
+POST http://localhost:3000/api/users
 Content-Type: application/json 
 
 {
-  "dni": "85674898",
+  "dni": "5674898",
   "name": "Tirone",
   "surname": "Gonzales",
-  "email": "ag3dg@gmail.com"
+  "email": "ag3dg@gmail.com",
+  "password": "12345678",
+  "admin": false
+
 }
 ### ID
 @id = {{createUser.response.body.data.id}}
 ### get user by id
-GET http://localhost:3000/api/members/{{id}}
+GET http://localhost:3000/api/users/{{id}}
 
 ### Edit/modify user (PUT - recurso completo/objeto con estado final)
-PUT http://localhost:3000/api/members/{{id}}
+PUT http://localhost:3000/api/users/{{id}}
 Content-Type: application/json
 
 {
@@ -31,7 +34,7 @@ Content-Type: application/json
 
 ### Post a user
 # @name createUserToDelete
-POST http://localhost:3000/api/members
+POST http://localhost:3000/api/users
 Content-Type: application/json 
 
 {
@@ -41,10 +44,10 @@ Content-Type: application/json
 
 @idToDelete = {{createUserToDelete.response.body.data.id}}
 ### delete user
-DELETE http://localhost:3000/api/members/{{idToDelete}}
+DELETE http://localhost:3000/api/users/{{idToDelete}}
 
 ### Edit/modify user (PATCH - Modificaciones parciales/modificaciones incrementales)
-PATCH http://localhost:3000/api/members/{{idToDelete}}
+PATCH http://localhost:3000/api/users/{{idToDelete}}
 Content-Type: application/json
 
 {

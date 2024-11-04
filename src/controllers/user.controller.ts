@@ -9,7 +9,7 @@ const em = orm.em;
 em.getRepository(User);
 function sanitizeUserInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
-    dni: req.body.dni,
+    dni: req.body.dni.padStart(8, "0"),
     name: req.body.name,
     surname: req.body.surname,
     email: req.body.email,
@@ -26,7 +26,7 @@ function sanitizeUserInput(req: Request, res: Response, next: NextFunction) {
 
 async function findAll(req: Request, res: Response) {
   try {
-    const users = await em.find(User, {}, { populate: ["purchaseRecord"] });
+    const users = await em.find(User, {}, { populate: ["purchaseRecords"] });
     res.status(200).json({ message: "found all users", data: users });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -39,7 +39,7 @@ async function findOne(req: Request, res: Response) {
     const user = await em.findOneOrFail(
       User,
       { id },
-      { populate: ["purchaseRecord"] }
+      { populate: ["purchaseRecords"] }
     );
     res.status(200).json({ message: "found user", data: user });
   } catch (error: any) {

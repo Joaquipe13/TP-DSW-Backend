@@ -13,32 +13,66 @@ function validateCoursePurchaseRecord(object: any) {
   }
 }
 
-const searchByCourseSchema = z.object({
-  course: z.number().min(1, "Course is required"),
-});
-
-function validateSearchByCourse(object: any) {
-  try {
-    return searchByCourseSchema.parse(object);
-  } catch (error: any) {
-    throw error;
-  }
-}
-const searchByDateRangeSchema = z
+const searchByQuerySchema = z
   .object({
-    startDate: z.string().nonempty("startDate must be defined"),
-    endDate: z.string().nonempty("endDate must be defined"),
+    startDate: z
+      .string()
+      .optional()
+      .refine(
+        (date) => {
+          return !date || !isNaN(Date.parse(date));
+        },
+        {
+          message: "startDate must be a valid date",
+        }
+      ),
+    endDate: z
+      .string()
+      .optional()
+      .refine(
+        (date) => {
+          return !date || !isNaN(Date.parse(date));
+        },
+        {
+          message: "endDate must be a valid date",
+        }
+      ),
+    course: z.number().optional(),
   })
-  .refine((data) => {
-    const { startDate, endDate } = data;
-    return new Date(endDate) >= new Date(startDate);
-  }, {
-    message: "endDate must be greater than or equal to startDate",
-    path: ["endDate"],
-  });
-function validateSearchByDateRange(object: any) {
+  .refine(
+    (data) => {
+      if (data.startDate && data.endDate) {
+        return new Date(data.endDate) >= new Date(data.startDate);
+      }
+      return true;
+    },
+    {
+      message: "endDate must be greater than or equal to startDate",
+      path: ["endDate"],
+    }
+  );
+function validateSearchByQuery(object: any) {
+  if (!object.startDate && !object.endDate && !object.course) {
+    return undefined;
+  }
   try {
-    return searchByDateRangeSchema.parse(object);
+    const parsedData = searchByQuerySchema.parse(object);
+    const query: any = {};
+    if (parsedData.startDate && parsedData.endDate) {
+      query.purchaseAt = {
+        $gte: new Date(parsedData.startDate),
+        $lte: new Date(parsedData.endDate),
+      };
+    } else if (parsedData.startDate) {
+      query.purchaseAt = { $gte: new Date(parsedData.startDate) };
+    } else if (parsedData.endDate) {
+      query.purchaseAt = { $lte: new Date(parsedData.endDate) };
+    }
+    if (parsedData.course) {
+      query.course = parsedData.course;
+    }
+
+    return query;
   } catch (error: any) {
     throw error;
   }
@@ -60,7 +94,6 @@ function validateCoursePurchaseRecordToPatch(object: any) {
 */
 export {
   //validateCoursePurchaseRecordToPatch,
-  validateSearchByDateRange,
-  validateSearchByCourse,
+  validateSearchByQuery,
   validateCoursePurchaseRecord,
 };

@@ -36,7 +36,7 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 app.use("/api/subscriptions", subscriptionRouter);
-app.use(authRoutes);
+//app.use(authRoutes);
 app.use("/api/subsPurchaseRecords", subsPurchaseRecordRouter);
 
 app.use("/api/users", userRouter);
@@ -45,7 +45,7 @@ app.use("/api/files", fileRouter);
 app.use("/api/units", unitRouter);
 
 app.use("/api/courses", courseRouter);
-app.use("/api/coursesPurchaseRecords", coursePurchaseRecordRouter);
+app.use("/api/coursePurchaseRecords", coursePurchaseRecordRouter);
 app.use("/api/topics", topicRouter);
 
 app.use((_, res) => {
