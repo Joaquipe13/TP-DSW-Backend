@@ -3,13 +3,16 @@ import { z } from "zod";
 const courseSchema = z.object({
   title: z.string().min(1, "Title is required"),
   price: z.number().min(1, "Price is required"),
-  topics: z.array(z.number().int().positive()).min(1, "At least one topic is required"),
+  topics: z
+    .array(z.number().int().positive())
+    .min(1, "At least one topic is required"),
 });
 
 const courseToPatchSchema = z.object({
   title: z.string().optional(),
   price: z.number().optional(),
   topics: z.array(z.number().int().positive()).optional(),
+  isPublic: z.boolean().optional(),
 });
 
 const searchByTitleSchema = z.object({

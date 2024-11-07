@@ -15,6 +15,7 @@ function sanitizeCourseInput(req: Request, res: Response, next: NextFunction) {
     title: req.body.title,
     price: Number(req.body.price),
     topics: req.body.topics,
+    isPublic: req.body.isPublic,
   };
   Object.keys(req.body.sanitizedInput).forEach((key) => {
     if (req.body.sanitizedInput[key] === undefined) {
@@ -77,6 +78,7 @@ async function add(req: Request, res: Response) {
       ...validCourse,
       createdAt: new Date(),
       isActive: true,
+      isPublic: false,
     });
     await em.flush();
     const courseCreated = em.getReference(Course, course.id);
