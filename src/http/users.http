@@ -7,7 +7,7 @@ POST http://localhost:3000/api/users
 Content-Type: application/json 
 
 {
-  "dni": "5674898",
+  "dni": "56748981",
   "name": "Tirone",
   "surname": "Gonzales",
   "email": "ag3dg@gmail.com",

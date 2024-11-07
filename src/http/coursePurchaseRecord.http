@@ -2,14 +2,14 @@
 GET http://localhost:3000/api/coursePurchaseRecords
 
 ### searchabyfechas purchaseRecords
-GET http://localhost:3000/api/coursePurchaseRecords?course=2
+GET http://localhost:3000/api/coursePurchaseRecords?user=2
 ### create new purchaseRecord
 # @name createPurchaseRecord
 POST http://localhost:3000/api/coursePurchaseRecords
 Content-Type: application/json 
 
 {
-  "user": 1,
+  "user": 2,
   "course": 2
 }
 ###ID

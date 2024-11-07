@@ -25,9 +25,40 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   });
   next();
 }
+function sanitizedSearchByQuery(query: any) {
+  const sanitizedQuery: any = {};
+  if (query.startDate) {
+    const startDate = new Date(query.startDate);
+    if (!isNaN(startDate.getTime())) {
+      sanitizedQuery.startDate = startDate.toISOString();
+    }
+  }
+  if (query.endDate) {
+    // Sanitizar endDate como string válido de fecha
+    const endDate = new Date(query.endDate);
+    if (!isNaN(endDate.getTime())) {
+      sanitizedQuery.endDate = endDate.toISOString();
+    }
+  }
+  if (query.course) {
+    const courseId = Number(query.course);
+    if (!isNaN(courseId)) {
+      sanitizedQuery.course = courseId;
+    }
+  }
+  if (query.user) {
+    const userId = Number(query.user);
+    if (!isNaN(userId)) {
+      sanitizedQuery.user = userId;
+    }
+  }
+  return sanitizedQuery;
+}
+
 async function findAll(req: Request, res: Response) {
   try {
-    const validatedQuery = validateSearchByQuery(req.query);
+    const sanitizedQuery = sanitizedSearchByQuery(req.query);
+    const validatedQuery = validateSearchByQuery(sanitizedQuery);
 
     const coursePurchaseRecords = await em.find(
       CoursePurchaseRecord,
@@ -36,9 +67,10 @@ async function findAll(req: Request, res: Response) {
         populate: ["course", "user"],
       }
     );
+
     res.json({
       message: "found all coursePurchaseRecords",
-      data: coursePurchaseRecords,
+      data: { coursePurchaseRecords },
     });
   } catch (error: any) {
     res.status(500).json({ message: error.message });

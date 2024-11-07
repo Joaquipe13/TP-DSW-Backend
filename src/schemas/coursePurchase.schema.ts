@@ -36,7 +36,8 @@ const searchByQuerySchema = z
           message: "endDate must be a valid date",
         }
       ),
-    course: z.string().refine((value) => /^\d+$/.test(value)),
+    course: z.number().optional(),
+    user: z.number().optional(),
   })
   .refine(
     (data) => {
@@ -51,7 +52,7 @@ const searchByQuerySchema = z
     }
   );
 function validateSearchByQuery(object: any) {
-  if (!object.startDate && !object.endDate && !object.course) {
+  if (!object.startDate && !object.endDate && !object.course && !object.user) {
     return undefined;
   }
   try {
@@ -68,12 +69,11 @@ function validateSearchByQuery(object: any) {
       query.purchaseAt = { $lte: new Date(parsedData.endDate) };
     }
     if (parsedData.course) {
-      const courseId = Number(parsedData.course);
-      /*   if (!isNaN(courseId)) {
-        query.course = { id: courseId };
-      } */
+      query.course = parsedData.course;
     }
-
+    if (parsedData.user) {
+      query.user = parsedData.user;
+    }
     return query;
   } catch (error: any) {
     throw error;
