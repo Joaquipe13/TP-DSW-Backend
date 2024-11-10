@@ -33,7 +33,7 @@ function validateUser(object: any) {
   try {
     return userSchema.parse(object);
   } catch (error: any) {
-    throw error;
+    throw error.errors;
   }
 }
 

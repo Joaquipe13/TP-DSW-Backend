@@ -3,6 +3,8 @@ import { CoursePurchaseRecord } from "../entities/coursePurchaseRecord.entity.js
 import { Course } from "../entities/course.entity.js";
 import { orm } from "../shared/orm.js";
 import {
+  validateCheckPurchase,
+  validatelistPurchases,
   validateCoursePurchaseRecord,
   validateSearchByQuery,
 } from "../schemas/coursePurchase.schema.js";
@@ -120,5 +122,28 @@ async function add(req: Request, res: Response) {
     res.status(500).json({ message: error.message });
   }
 }
+async function listUserPurchasedCourses(req: Request, res: Response) {
+  try {
+    const user = validatelistPurchases(req.body.sanitizedInput).user;
 
-export { findAll, findOne, add, SanitizedInput };
+    const purchasedCourses = await em.find(
+      CoursePurchaseRecord,
+      { user: { id: user } },
+      { populate: ["course"] }
+    );
+
+    const courses = purchasedCourses.map((record) => record.course);
+
+    res.status(200).json({
+      message: courses.length
+        ? "Cursos comprados encontrados"
+        : "No se encontraron cursos comprados",
+      data: courses,
+    });
+  } catch (error: any) {
+    console.error("Error al obtener cursos comprados:", error);
+    res.status(500).json({ message: error.message });
+  }
+}
+
+export { findAll, findOne, add, SanitizedInput, listUserPurchasedCourses };

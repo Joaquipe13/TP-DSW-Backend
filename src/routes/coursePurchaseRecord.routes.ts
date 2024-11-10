@@ -4,13 +4,15 @@ import {
   findAll,
   findOne,
   add,
-
-  // update,
-  //remove,
+  listUserPurchasedCourses,
 } from "../controllers/coursePurchaseRecord.controller.js";
 
 export const coursePurchaseRecordRouter = Router();
 
+coursePurchaseRecordRouter.get(
+  "/user/:userId/courses",
+  listUserPurchasedCourses
+);
 coursePurchaseRecordRouter.get("/", findAll);
 coursePurchaseRecordRouter.get("/:id", findOne);
 coursePurchaseRecordRouter.post("/", SanitizedInput, add);

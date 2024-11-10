@@ -12,7 +12,7 @@ const courseToPatchSchema = z.object({
   title: z.string().optional(),
   price: z.number().optional(),
   topics: z.array(z.number().int().positive()).optional(),
-  isPublic: z.boolean().optional(),
+  isActive: z.boolean().optional(),
 });
 
 const searchByTitleSchema = z.object({

@@ -13,7 +13,6 @@ Content-Type: application/json
   "email": "ag3dg@gmail.com",
   "password": "12345678",
   "admin": false
-
 }
 ### ID
 @id = {{createUser.response.body.data.id}}

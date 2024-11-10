@@ -2,19 +2,18 @@ import "reflect-metadata";
 import express from "express";
 import dotenv from "dotenv";
 import { orm, syncSchema } from "./shared/orm.js";
-import { subscriptionRouter } from "./routes/subscription.routes.js";
+import cors from "cors";
+import { RequestContext } from "@mikro-orm/core";
+import { userRouter } from "./routes/user.routes.js";
+import { fileRouter } from "./routes/file.routes.js";
+import { levelRouter } from "./routes/level.routes.js";
 import { subsPurchaseRecordRouter } from "./routes/subsPurchaseRecord.routes.js";
+import { subscriptionRouter } from "./routes/subscription.routes.js";
+import { unitRouter } from "./routes/unit.routes.js";
+import { loginRouter } from "./routes/login.routes.js";
 import { courseRouter } from "./routes/course.routes.js";
 import { coursePurchaseRecordRouter } from "./routes/coursePurchaseRecord.routes.js";
 import { topicRouter } from "./routes/topic.routes.js";
-import { RequestContext } from "@mikro-orm/core";
-import { userRouter } from "./routes/user.routes.js";
-import authRoutes from "./routes/auth.routes.js";
-
-import cors from "cors";
-import { levelRouter } from "./routes/level.routes.js";
-import { fileRouter } from "./routes/file.routes.js";
-import { unitRouter } from "./routes/unit.routes.js";
 
 dotenv.config();
 
@@ -36,14 +35,13 @@ app.use((req, res, next) => {
 app.use(express.json());
 
 app.use("/api/subscriptions", subscriptionRouter);
-//app.use(authRoutes);
 app.use("/api/subsPurchaseRecords", subsPurchaseRecordRouter);
 
 app.use("/api/users", userRouter);
 app.use("/api/levels", levelRouter);
 app.use("/api/files", fileRouter);
 app.use("/api/units", unitRouter);
-
+app.use("/api/login", loginRouter);
 app.use("/api/courses", courseRouter);
 app.use("/api/coursePurchaseRecords", coursePurchaseRecordRouter);
 app.use("/api/topics", topicRouter);

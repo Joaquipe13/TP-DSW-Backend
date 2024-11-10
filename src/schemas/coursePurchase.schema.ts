@@ -36,8 +36,6 @@ const searchByQuerySchema = z
           message: "endDate must be a valid date",
         }
       ),
-    course: z.number().optional(),
-    user: z.number().optional(),
   })
   .refine(
     (data) => {
@@ -68,34 +66,41 @@ function validateSearchByQuery(object: any) {
     } else if (parsedData.endDate) {
       query.purchaseAt = { $lte: new Date(parsedData.endDate) };
     }
-    if (parsedData.course) {
-      query.course = parsedData.course;
-    }
-    if (parsedData.user) {
-      query.user = parsedData.user;
-    }
     return query;
   } catch (error: any) {
     throw error;
   }
 }
-//Esto no me parece que esta de mas, no deberia poder editarse la compra de un curso
-/* 
-const coursePurchaseToPatchSchema = z.object({
-  course: z.number().optional(),
-  user: z.number().optional(),
+const checkPurchaseSchema = z.object({
+  user: z.coerce.number().int().positive(),
+  course: z.coerce.number().int().positive(),
 });
 
-function validateCoursePurchaseRecordToPatch(object: any) {
+const listPurchasesSchema = z.object({
+  user: z.coerce.number().int().positive(),
+});
+
+function validateCheckPurchase(object: any) {
   try {
-    return coursePurchaseToPatchSchema.parse(object);
+    return checkPurchaseSchema.parse(object);
   } catch (error: any) {
     throw error;
   }
-} 
-*/
+}
+function validatelistPurchases(object: any) {
+  try {
+    return listPurchasesSchema.parse(object);
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export { checkPurchaseSchema, listPurchasesSchema };
+
 export {
-  //validateCoursePurchaseRecordToPatch,
+  
+  validateCheckPurchase,
+  validatelistPurchases,
   validateSearchByQuery,
   validateCoursePurchaseRecord,
 };

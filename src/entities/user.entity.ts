@@ -11,16 +11,13 @@ import { PurchaseRecord } from "./purchaseRecord.entity.js";
 
 @Entity()
 export abstract class User extends BaseEntity {
-  @Property({ unique: true })
-  dni!: string;
-
   @Property({ nullable: false })
   name!: string;
 
   @Property({ nullable: false })
   surname!: string;
 
-  @Property({ nullable: false })
+  @Property({ nullable: false, unique: true })
   email!: string;
 
   @Property({ nullable: false })

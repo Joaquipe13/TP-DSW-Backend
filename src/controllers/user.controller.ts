@@ -49,10 +49,20 @@ async function findOne(req: Request, res: Response) {
 async function add(req: Request, res: Response) {
   try {
     const validUser = validateUser(req.body.sanitizedInput);
+    if (validUser instanceof ZodError) {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: validUser,
+      });
+    }
+    if (validUser.admin === undefined) validUser.admin = false;
     const user = em.create(User, validUser);
     await em.flush();
     const userCreated = em.getReference(User, user.id);
-    res.status(201).json({ message: "user created", data: { userCreated } });
+    res.status(201).json({
+      message: "user created",
+      data: userCreated,
+    });
   } catch (error: any) {
     if (error instanceof ZodError) {
       return res

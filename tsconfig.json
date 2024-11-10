@@ -12,9 +12,8 @@
     "alwaysStrict": true,
     "skipLibCheck": true,
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
+    "experimentalDecorators": true
   },
   "include": ["src/**/*", "**/*.ts", "dist/index.js"],
   "exclude": ["node_modules"]
-  
 }

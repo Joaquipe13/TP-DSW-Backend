@@ -77,8 +77,7 @@ async function add(req: Request, res: Response) {
     const course = em.create(Course, {
       ...validCourse,
       createdAt: new Date(),
-      isActive: true,
-      isPublic: false,
+      isActive: false,
     });
     await em.flush();
     const courseCreated = em.getReference(Course, course.id);
