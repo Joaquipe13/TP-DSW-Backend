@@ -5,6 +5,7 @@ import {
   Collection,
   OneToMany,
   Rel,
+  Cascade,
 } from "@mikro-orm/core";
 import { BaseEntity } from "../shared/baseEntity.entity.js";
 import { Course } from "./course.entity.js";
@@ -20,10 +21,10 @@ export class Level extends BaseEntity {
 
   @Property({ nullable: false })
   order!: number;
-  
+
   @ManyToOne(() => Course, { nullable: false })
   course!: Rel<Course>;
 
-  @OneToMany(() => Unit, (unit) => unit.level)
-  units? = new Collection<Unit>(this);
+  @OneToMany(() => Unit, (unit) => unit.level, { cascade: [Cascade.ALL] })
+  units = new Collection<Unit>(this);
 }

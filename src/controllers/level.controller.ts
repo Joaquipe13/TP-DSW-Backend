@@ -24,22 +24,22 @@ function sanitizeLevelInput(req: Request, res: Response, next: NextFunction) {
   next();
 }
 function sanitizeSearchInput(req: Request) {
-  const queryResult: any = {
-    course: req.query.course,
-    order: req.query.order,
-  };
-
-  // Eliminar keys indefinidos y sanitizar el título
-  Object.keys(queryResult).forEach((key) => {
-    if (queryResult[key] === undefined) {
-      delete queryResult[key];
-    } else if (key === "title") {
-      queryResult[key] = { $like: `%${queryResult[key].trim()}%` }; // Sanitizar y preparar para consulta
+  const queryResult: any = {};
+  if (req.query.course !== undefined) {
+    const course = Number(req.query.course);
+    if (!isNaN(course) && course > 0) {
+      queryResult.course = course;
     }
-  });
-
+  }
+  if (req.query.order !== undefined) {
+    const order = Number(req.query.order);
+    if (!isNaN(order) && (order === 1 || order === -1)) {
+      queryResult.order = order;
+    }
+  }
   return queryResult;
 }
+
 async function findAll(req: Request, res: Response) {
   try {
     const sanitizedQuery = sanitizeSearchInput(req);

@@ -124,16 +124,21 @@ async function add(req: Request, res: Response) {
 }
 async function listUserPurchasedCourses(req: Request, res: Response) {
   try {
-    const user = validatelistPurchases(req.body.sanitizedInput).user;
+    // Extraer y validar userId desde req.params
+    const userId = Number(req.params.userId);
 
+    // Verificar que userId sea un número válido
+    if (isNaN(userId) || userId <= 0) {
+      return res.status(400).json({ message: "Invalid userId" });
+    }
+
+    validatelistPurchases({ user: userId });
     const purchasedCourses = await em.find(
       CoursePurchaseRecord,
-      { user: { id: user } },
+      { user: { id: userId } },
       { populate: ["course"] }
     );
-
     const courses = purchasedCourses.map((record) => record.course);
-
     res.status(200).json({
       message: courses.length
         ? "Cursos comprados encontrados"
@@ -145,5 +150,33 @@ async function listUserPurchasedCourses(req: Request, res: Response) {
     res.status(500).json({ message: error.message });
   }
 }
+async function checkCoursePurchase(req: Request, res: Response) {
+  try {
+    const purchase = validateCheckPurchase({
+      user: req.params.userId,
+      course: req.params.courseId,
+    });
 
-export { findAll, findOne, add, SanitizedInput, listUserPurchasedCourses };
+    const purchased = await em.findOne(CoursePurchaseRecord, {
+      user: { id: purchase.user },
+      course: { id: purchase.course },
+    });
+    res.status(200).json({
+      message: purchased
+        ? "El curso ha sido comprado por el usuario"
+        : "El curso no ha sido comprado por el usuario",
+      purchased: !!purchased,
+    });
+  } catch (error: any) {
+    console.error("Error al verificar compra:", error);
+    res.status(500).json({ message: error.message });
+  }
+}
+export {
+  findAll,
+  findOne,
+  add,
+  SanitizedInput,
+  listUserPurchasedCourses,
+  checkCoursePurchase,
+};

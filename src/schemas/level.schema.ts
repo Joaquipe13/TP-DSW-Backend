@@ -28,13 +28,12 @@ const levelToPatch = z.object({
   name: z
     .string()
     .max(20, "Name must not exceed 100 characters")
-    .regex(/^[A-Za-z\s]+$/, "Name can only contain letters and spaces")
+    .regex(/^[A-Za-z0-9\s.,-]+$/, "Name can only contain letters and spaces")
     .optional(),
   description: z
     .string()
     .max(500, "Description must not exceed 500 characters")
     .optional(),
-  course: z.number().int().positive().optional(),
   order: z.number().int().positive().optional(),
 });
 

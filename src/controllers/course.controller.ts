@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Course } from "./../entities/course.entity.js";
+import { Topic } from "./../entities/topic.entity.js";
 import { orm } from "./../shared/orm.js";
 import {
   validateCourse,
@@ -13,9 +14,9 @@ em.getRepository(Course);
 function sanitizeCourseInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     title: req.body.title,
-    price: Number(req.body.price),
+    price: req.body.price,
     topics: req.body.topics,
-    isPublic: req.body.isPublic,
+    isActive: req.body.isActive,
   };
   Object.keys(req.body.sanitizedInput).forEach((key) => {
     if (req.body.sanitizedInput[key] === undefined) {
@@ -97,13 +98,36 @@ async function add(req: Request, res: Response) {
 async function update(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id);
-    const course = em.getReference(Course, id);
+    const course = await em.findOneOrFail(Course, id); 
+
     const courseUpdated =
       req.method === "PATCH"
         ? validateCourseToPatch(req.body.sanitizedInput)
         : validateCourse(req.body.sanitizedInput);
+
+    // Verificar si la propiedad `topics` está presente en la solicitud
+    if (courseUpdated.topics && Array.isArray(courseUpdated.topics)) {
+      // Obtener las instancias de `Topic` por los IDs proporcionados
+      const topics = await em.find(Topic, {
+        id: { $in: courseUpdated.topics },
+      });
+
+      // Verificar que todos los IDs proporcionados correspondan a un `Topic` válido
+      if (topics.length !== courseUpdated.topics.length) {
+        return res
+          .status(400)
+          .json({ message: "Some topics could not be found." });
+      }
+
+      // Asignar las instancias de `Topic` a la propiedad `topics`
+      const updatedTopics = topics.map((topic) => topic.id); // Extraemos los IDs de los topics
+      courseUpdated.topics = updatedTopics; // Ahora pasamos instancias de Topic, no solo los IDs
+    }
+
+    // Asignar los datos validados al curso
     em.assign(course, courseUpdated);
     await em.flush();
+
     res.status(200).json({ message: "Course updated", data: course });
   } catch (error: any) {
     res.status(500).json({ message: error.message });

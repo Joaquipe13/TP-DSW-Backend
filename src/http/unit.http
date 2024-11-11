@@ -8,6 +8,7 @@ Content-Type: application/json
 
 {
   "name": "Unidad oncdse",
+  "content": "Contenido de la unidad",
   "level": 1
 }
                              
@@ -17,11 +18,10 @@ Content-Type: application/json
 GET http://localhost:3000/api/units/1
 
 ### Edit/modify unit (PUT - recurso completo/objeto con estado final)
-PUT http://localhost:3000/api/units/{{id}}
+PATCH  http://localhost:3000/api/units/5
 Content-Type: application/json
 
 {
-  "id": "1",
   "name": "Unit 3"
 }
 

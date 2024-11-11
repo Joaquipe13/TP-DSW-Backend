@@ -10,8 +10,8 @@ import {
 
 export const courseRouter = Router();
 
-courseRouter.get("/", findAll);
 courseRouter.get("/:id", findOne);
+courseRouter.get("/", findAll);
 courseRouter.post("/", sanitizeCourseInput, add);
 courseRouter.patch("/:id", sanitizeCourseInput, update);
 courseRouter.put("/:id", sanitizeCourseInput, update);

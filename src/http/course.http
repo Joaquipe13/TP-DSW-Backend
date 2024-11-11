@@ -24,12 +24,15 @@ GET http://localhost:3000/api/courses?title=tit
 GET http://localhost:3000/api/courses/{{id}}
 
 ### Edit/modify course (PUT - recurso completo/objeto con estado final)
-PUT http://localhost:3000/api/courses/{{id}}
+PUT http://localhost:3000/api/courses/2
 Content-Type: application/json
 
 {
-  "tittle": "***",
-  "price": "40"
+  "id": 2,
+  "tittle": "*sadsadas**",
+  "price": "30",
+  "topics": [1],
+  "isActive": true
 }
 
 ### POST a course
@@ -39,7 +42,11 @@ Content-Type: application/json
 
 {
   "tittle": "***",
-  "price": "30"
+  "price": "30",
+"isActive": false,
+"topics": [1]
+
+
 }
 
 ###
@@ -49,10 +56,14 @@ DELETE http://localhost:3000/api/courses/{{idToDelete}}
 
 
 ### Edit/modify course (PATCH - Modificaciones parciales/modificaciones incrementales)
-PATCH http://localhost:3000/api/courses/{{idToDelete}}
+PATCH http://localhost:3000/api/courses/2
 Content-Type: application/json
 
 {
-  "price": "8"
+  "tittle": "*sadsadas**",
+  "price": 30,
+  "isActive": false,
+  "topics": [1,2],
+  "isActive": true
 }
 

@@ -11,7 +11,9 @@ em.getRepository(Unit);
 function sanitizeUnitInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     name: req.body.name,
+    content: req.body.content,
     level: req.body.level,
+    order: req.body.order,
   };
   Object.keys(req.body.sanitizedInput).forEach((key) => {
     if (req.body.sanitizedInput[key] === undefined)
@@ -59,16 +61,33 @@ async function add(req: Request, res: Response) {
 async function update(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id);
-    const unit = em.getReference(Unit, id);
+
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid ID" });
+    }
+
+    // Obtén la referencia de la unidad
+    const unit = await em.findOne(Unit, id);
+
+    if (!unit) {
+      return res.status(404).json({ message: "Unit not found" });
+    }
+
     let unitUpdated;
 
     if (req.method === "PATCH") {
+      // Validar la entrada antes de procesarla
       unitUpdated = validateUnitToPatch(req.body.sanitizedInput);
+
+      // Si se proporciona un nuevo valor para "order", procesamos la actualización de los órdenes
       if (unitUpdated.order) {
         const originalOrder = unit.order;
         const newOrder = unitUpdated.order;
+
         if (originalOrder !== newOrder) {
           const allUnits = await em.find(Unit, {});
+
+          // Si el nuevo orden es mayor, reducimos el orden de las unidades entre los valores originales y nuevos
           if (newOrder > originalOrder) {
             allUnits.forEach((unit) => {
               if (unit.order > originalOrder && unit.order <= newOrder) {
@@ -85,12 +104,19 @@ async function update(req: Request, res: Response) {
         }
       }
     } else {
+      // Validar la entrada para otros tipos de solicitudes (PUT, por ejemplo)
       unitUpdated = validateUnit(req.body.sanitizedInput);
     }
-    em.assign(unitUpdated, req.body.sanitizedInput);
+
+    // Asignar los nuevos valores a la unidad y guardar
+    em.assign(unit, unitUpdated);
     await em.flush();
-    res.status(200).json({ message: "unit updated", data: unitUpdated });
+
+    // Responder con éxito
+    res.status(200).json({ message: "Unit updated", data: unitUpdated });
   } catch (error: any) {
+    // Capturar cualquier error y devolver una respuesta 500
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 }

@@ -87,6 +87,7 @@ function validateCheckPurchase(object: any) {
     throw error;
   }
 }
+
 function validatelistPurchases(object: any) {
   try {
     return listPurchasesSchema.parse(object);
@@ -98,7 +99,6 @@ function validatelistPurchases(object: any) {
 export { checkPurchaseSchema, listPurchasesSchema };
 
 export {
-  
   validateCheckPurchase,
   validatelistPurchases,
   validateSearchByQuery,

@@ -1,5 +1,5 @@
 ### get all levels
-GET http://localhost:3000/api/levels/?course=31&order=2`
+GET http://localhost:3000/api/levels/2
 
 ### POST new level
 # @name createLevel
@@ -38,10 +38,10 @@ Content-Type: application/json
 
 @idToDelete = {{createLevelToDelete.response.body.data.id}}
 ### delete level
-DELETE http://localhost:3000/api/levels/{{idToDelete}}
+DELETE http://localhost:3000/api/levels/1
 
 ### Edit/modify level (PATCH - Modificaciones parciales/modificaciones incrementales)
-PATCH http://localhost:3000/api/levels/{{idToDelete}}
+PATCH http://localhost:3000/api/levels/1
 Content-Type: application/json
 
 {

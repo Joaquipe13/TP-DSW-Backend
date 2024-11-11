@@ -2,7 +2,10 @@
 GET http://localhost:3000/api/coursePurchaseRecords
 
 ### searchabyfechas purchaseRecords
-GET http://localhost:3000/api/coursePurchaseRecords/user/1/courses
+GET http://localhost:3000/api/coursePurchaseRecords/user/2/courses
+
+### check if user has purchased a course
+GET http://localhost:3000/api/coursePurchaseRecords/check/1/2
 
 ### create new purchaseRecord
 # @name createPurchaseRecord
