@@ -21,10 +21,26 @@ function sanitizeUnitInput(req: Request, res: Response, next: NextFunction) {
   });
   next();
 }
-
+function sanitizeSearchInput(req: Request) {
+  const queryResult: any = {};
+  if (req.query.level !== undefined) {
+    const level = Number(req.query.level);
+    if (!isNaN(level) && level > 0) {
+      queryResult.level = level;
+    }
+  }
+  if (req.query.order !== undefined) {
+    const order = Number(req.query.order);
+    if (!isNaN(order) && (order === 1 || order === -1)) {
+      queryResult.order = order;
+    }
+  }
+  return queryResult;
+}
 async function findAll(req: Request, res: Response) {
   try {
-    const units = await em.find(Unit, {});
+    const sanitizedQuery = sanitizeSearchInput(req);
+    const units = await em.find(Unit, sanitizedQuery);
     res.status(200).json({ message: "found all units", data: units });
   } catch (error: any) {
     res.status(500).json({ message: error.message });

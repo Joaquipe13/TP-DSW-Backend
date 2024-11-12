@@ -1,6 +1,5 @@
 ### get all levels
-GET http://localhost:3000/api/levels/2
-
+GET http://localhost:3000/api/levels?course=3
 ### POST new level
 # @name createLevel
 POST http://localhost:3000/api/levels

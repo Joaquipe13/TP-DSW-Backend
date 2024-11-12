@@ -29,19 +29,23 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
 }
 function sanitizedSearchByQuery(query: any) {
   const sanitizedQuery: any = {};
+
+  // Sanitizar startDate
   if (query.startDate) {
     const startDate = new Date(query.startDate);
     if (!isNaN(startDate.getTime())) {
       sanitizedQuery.startDate = startDate.toISOString();
     }
   }
+
+  // Sanitizar endDate
   if (query.endDate) {
-    // Sanitizar endDate como string válido de fecha
     const endDate = new Date(query.endDate);
     if (!isNaN(endDate.getTime())) {
       sanitizedQuery.endDate = endDate.toISOString();
     }
   }
+
   if (query.course) {
     const courseId = Number(query.course);
     if (!isNaN(courseId)) {

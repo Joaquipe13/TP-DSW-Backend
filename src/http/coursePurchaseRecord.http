@@ -1,8 +1,8 @@
 ### get all purchaseRecords
-GET http://localhost:3000/api/coursePurchaseRecords
+GET http://localhost:3000/api/coursePurchaseRecords?endDate=2024-11-30T03:00:00.000Z
 
 ### searchabyfechas purchaseRecords
-GET http://localhost:3000/api/coursePurchaseRecords/user/2/courses
+GET http://localhost:3000/api/CoursePurchaseRecords
 
 ### check if user has purchased a course
 GET http://localhost:3000/api/coursePurchaseRecords/check/1/2
