@@ -11,14 +11,13 @@ import { SubsPurchaseRecord } from "../entities/subsPurchaseRecord.entity.js";
 const em = orm.em;
 em.getRepository(Subscription);
 function sanitizedInput(req: Request, res: Response, next: NextFunction) {
-  // Creación de objeto con propiedades válidas
+
   req.body.sanitizedInput = {
     description: req.body.description,
     duration: req.body.duration,
     price: req.body.price,
   };
 
-  // Eliminación de propiedades undefined
   Object.keys(req.body.sanitizedInput).forEach((key) => {
     if (req.body.sanitizedInput[key] === undefined) {
       delete req.body.sanitizedInput[key];
@@ -67,7 +66,6 @@ async function add(req: Request, res: Response) {
       return (
         res
           .status(400)
-          // .json(error.issues.map((issue) => ({ message: issue.message })));
           .json(error.issues)
       );
     }

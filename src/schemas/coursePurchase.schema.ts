@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 const coursePurchaseSchema = z.object({
-  course: z.number().min(1, "Course is required"),
-  user: z.number().min(1, "User is required"),
+  course: z.coerce.number().int().positive().min(1, "Course is required"),
+  user: z.coerce.number().int().positive().min(1, "User is required"),
 });
 
 function validateCoursePurchaseRecord(object: any) {
@@ -36,10 +36,10 @@ const searchByQuerySchema = z
           message: "endDate must be a valid date",
         }
       ),
+    user: z.coerce.number().int().positive().optional(),
   })
   .refine(
     (data) => {
-      // Validación de que endDate es mayor o igual a startDate
       if (data.startDate && data.endDate) {
         return new Date(data.endDate) >= new Date(data.startDate);
       }
@@ -52,30 +52,29 @@ const searchByQuerySchema = z
   );
 
 function validateSearchByQuery(object: any) {
-  if (!object.startDate && !object.endDate && !object.course && !object.user) {
+  if (!object.startDate && !object.endDate && !object.user) {
     return undefined;
   }
   try {
-    // Validamos el objeto contra el esquema de Zod
     const parsedData = searchByQuerySchema.parse(object);
 
     const query: any = {};
-
-    // Generamos el query para MikroORM
     if (parsedData.startDate && parsedData.endDate) {
       query.purchaseAt = {
-        $gte: new Date(parsedData.startDate), // Mayor o igual a startDate
-        $lte: new Date(parsedData.endDate),   // Menor o igual a endDate
+        $gte: new Date(parsedData.startDate),
+        $lte: new Date(parsedData.endDate),
       };
     } else if (parsedData.startDate) {
-      query.purchaseAt = { $gte: new Date(parsedData.startDate) }; // Solo startDate
+      query.purchaseAt = { $gte: new Date(parsedData.startDate) };
     } else if (parsedData.endDate) {
-      query.purchaseAt = { $lte: new Date(parsedData.endDate) }; // Solo endDate
+      query.purchaseAt = { $lte: new Date(parsedData.endDate) };
     }
-
+    if (parsedData.user) {
+      query.user = parsedData.user;
+    }
     return query;
   } catch (error: any) {
-    throw error; // Si la validación falla, lanzamos el error
+    throw error;
   }
 }
 

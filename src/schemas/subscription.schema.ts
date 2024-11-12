@@ -26,6 +26,7 @@ const subscriptionToPatch = z.object({
     .number({ message: "Invalid duration" })
     .min(1, "Duration is required"),
   price: z.number({ message: "Invalid price" }).min(1, "Price is required"),
+  isActive: z.boolean().optional(),
 });
 
 export function validateSubscriptionToPatch(object: any) {

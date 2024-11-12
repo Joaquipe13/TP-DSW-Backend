@@ -8,8 +8,7 @@ import {
   validateCoursePurchaseRecord,
   validateSearchByQuery,
 } from "../schemas/coursePurchase.schema.js";
-import { getErrorMap, ZodError } from "zod";
-import { getRandomValues } from "crypto";
+import { ZodError } from "zod";
 
 const em = orm.em;
 em.getRepository(CoursePurchaseRecord);
@@ -30,7 +29,6 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
 function sanitizedSearchByQuery(query: any) {
   const sanitizedQuery: any = {};
 
-  // Sanitizar startDate
   if (query.startDate) {
     const startDate = new Date(query.startDate);
     if (!isNaN(startDate.getTime())) {
@@ -38,7 +36,6 @@ function sanitizedSearchByQuery(query: any) {
     }
   }
 
-  // Sanitizar endDate
   if (query.endDate) {
     const endDate = new Date(query.endDate);
     if (!isNaN(endDate.getTime())) {
@@ -128,10 +125,8 @@ async function add(req: Request, res: Response) {
 }
 async function listUserPurchasedCourses(req: Request, res: Response) {
   try {
-    // Extraer y validar userId desde req.params
     const userId = Number(req.params.userId);
 
-    // Verificar que userId sea un número válido
     if (isNaN(userId) || userId <= 0) {
       return res.status(400).json({ message: "Invalid userId" });
     }

@@ -8,8 +8,8 @@ Content-Type: application/json
 
 {
   "description": "1 mes",
-  "duration": "30",
-  "price": "300"
+  "duration": 30,
+  "price": 300
 }
 
 ### ID
@@ -47,11 +47,10 @@ DELETE http://localhost:3000/api/subscriptions/{{idToDelete}}
 
 
 ### Edit/modify subscription (PATCH - Modificaciones parciales/modificaciones incrementales)
-PATCH http://localhost:3000/api/subscriptions/{{idToDelete}}
+PATCH http://localhost:3000/api/subscriptions/1
 Content-Type: application/json
 
 {
-  //"dateStart": "2024-06-17",
   "price": "8"
 }
 
