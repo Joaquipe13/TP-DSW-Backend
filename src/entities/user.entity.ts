@@ -10,7 +10,7 @@ import { BaseEntity } from "../shared/baseEntity.entity.js";
 import { PurchaseRecord } from "./purchaseRecord.entity.js";
 
 @Entity()
-export abstract class User extends BaseEntity {
+export class User extends BaseEntity {
   @Property({ nullable: false })
   name!: string;
 
@@ -20,7 +20,7 @@ export abstract class User extends BaseEntity {
   @Property({ nullable: false, unique: true })
   email!: string;
 
-  @Property({ nullable: false })
+  @Property({ nullable: false, length: 255 })
   password!: string;
 
   @Property({ nullable: false, default: false })
