@@ -4,6 +4,7 @@ import { User } from "../entities/user.entity.js";
 import { validateLoginData } from "../schemas/login.schema.js";
 import * as z from "zod";
 import { orm } from "../shared/orm.js";
+import { verifyPassword } from "../utils/authUtils.js";
 
 const admin = {
   name: "Admin",
@@ -32,7 +33,7 @@ export const validateLogin = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const passwordMatch = password === user.password;
+    const passwordMatch = await verifyPassword(user.password, password);
 
     if (!passwordMatch) {
       return res.status(401).json({ message: "Invalid credentials" });

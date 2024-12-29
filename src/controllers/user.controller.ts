@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import { User } from "../entities/user.entity.js";
+import { User } from "../entities/user.entity";
 import { orm } from "../shared/orm.js";
-import { registerSchema } from "../schemas/register.schema.js";
-import { validateUser, validateUserToPatch } from "../schemas/user.schema.js";
+import { validateUser, validateUserToPatch } from "../schemas/user.schema";
 import { ZodError } from "zod";
+import { encryptPassword } from "../utils/authUtils.js";
 
 const em = orm.em;
 em.getRepository(User);
@@ -55,6 +55,14 @@ async function add(req: Request, res: Response) {
         errors: validUser,
       });
     }
+    const existingUser = await em.findOne(User, { email: validUser.email });
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User with this email already exists",
+      });
+    }
+    const hashedPassword = await encryptPassword(validUser.password);
+    validUser.password = hashedPassword;
     if (validUser.admin === undefined) validUser.admin = false;
     const user = em.create(User, validUser);
     await em.flush();
