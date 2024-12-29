@@ -1,13 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import { CoursePurchaseRecord } from "../entities/coursePurchaseRecord.entity.js";
-import { Course } from "../entities/course.entity.js";
+import { CoursePurchaseRecord, Course } from "../entities";
 import { orm } from "../shared/orm.js";
 import {
-  validateCheckPurchase,
-  validatelistPurchases,
+  validateCheckCoursePurchase,
   validateCoursePurchaseRecord,
+  validateListPurchases,
   validateSearchByQuery,
-} from "../schemas/coursePurchase.schema.js";
+} from "../schemas";
 import { ZodError } from "zod";
 
 const em = orm.em;
@@ -119,7 +118,6 @@ async function add(req: Request, res: Response) {
         .status(400)
         .json(error.issues.map((issue) => ({ message: issue.message })));
     }
-    console.log(error.issues);
     res.status(500).json({ message: error.message });
   }
 }
@@ -131,7 +129,7 @@ async function listUserPurchasedCourses(req: Request, res: Response) {
       return res.status(400).json({ message: "Invalid userId" });
     }
 
-    validatelistPurchases({ user: userId });
+    validateListPurchases({ user: userId });
     const purchasedCourses = await em.find(
       CoursePurchaseRecord,
       { user: { id: userId } },
@@ -140,18 +138,18 @@ async function listUserPurchasedCourses(req: Request, res: Response) {
     const courses = purchasedCourses.map((record) => record.course);
     res.status(200).json({
       message: courses.length
-        ? "Cursos comprados encontrados"
-        : "No se encontraron cursos comprados",
+        ? "Purchased courses found"
+        : "No purchased courses were found",
       data: courses,
     });
   } catch (error: any) {
-    console.error("Error al obtener cursos comprados:", error);
+    console.error("Error retrieving purchased courses:", error);
     res.status(500).json({ message: error.message });
   }
 }
 async function checkCoursePurchase(req: Request, res: Response) {
   try {
-    const purchase = validateCheckPurchase({
+    const purchase = validateCheckCoursePurchase({
       user: req.params.userId,
       course: req.params.courseId,
     });
@@ -162,12 +160,12 @@ async function checkCoursePurchase(req: Request, res: Response) {
     });
     res.status(200).json({
       message: purchased
-        ? "El curso ha sido comprado por el usuario"
-        : "El curso no ha sido comprado por el usuario",
+        ? "Course has been purchased by the user"
+        : "Course has not been purchased by the user",
       purchased: !!purchased,
     });
   } catch (error: any) {
-    console.error("Error al verificar compra:", error);
+    console.error("Error verifying course purchase:", error);
     res.status(500).json({ message: error.message });
   }
 }

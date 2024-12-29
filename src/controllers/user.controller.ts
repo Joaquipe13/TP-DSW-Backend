@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { User } from "../entities/user.entity";
+import { User } from "../entities";
 import { orm } from "../shared/orm.js";
-import { validateUser, validateUserToPatch } from "../schemas/user.schema";
+import { validateUser, validateUserToPatch } from "../schemas";
 import { ZodError } from "zod";
 import { encryptPassword } from "../utils/authUtils.js";
 

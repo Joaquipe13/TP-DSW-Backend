@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { Course } from "./../entities/course.entity.js";
-import { Topic } from "./../entities/topic.entity.js";
+import { Course, Topic } from "./../entities";
 import { orm } from "./../shared/orm.js";
 import {
   validateCourse,
@@ -98,7 +97,7 @@ async function add(req: Request, res: Response) {
 async function update(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id);
-    const course = await em.findOneOrFail(Course, id); 
+    const course = await em.findOneOrFail(Course, id);
 
     const courseUpdated =
       req.method === "PATCH"

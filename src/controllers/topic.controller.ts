@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { Topic } from "../entities/topic.entity.js";
+import { Topic } from "../entities";
 import { orm } from "../shared/orm.js";
-import { validatedTopic } from "../schemas/topic.schema.js";
+import { validatedTopic } from "../schemas";
 import { ZodError } from "zod";
 
 const em = orm.em;

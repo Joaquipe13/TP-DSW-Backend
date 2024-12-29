@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { EntityManager } from "@mikro-orm/core";
-import { User } from "../entities/user.entity.js";
-import { validateLoginData } from "../schemas/login.schema.js";
+import { User } from "../entities";
+import { validateLoginData } from "../schemas";
 import * as z from "zod";
 import { orm } from "../shared/orm.js";
 import { verifyPassword } from "../utils/authUtils.js";

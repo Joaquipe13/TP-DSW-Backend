@@ -1,17 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import { Subscription } from "../entities/subscription.entity.js";
+import { Subscription } from "../entities";
 import { orm } from "../shared/orm.js";
-import {
-  validateSubscription,
-  validateSubscriptionToPatch,
-} from "../schemas/subscription.schema.js";
+import { validateSubscription, validateSubscriptionToPatch } from "../schemas";
 import { ZodError } from "zod";
 import { SubsPurchaseRecord } from "../entities/subsPurchaseRecord.entity.js";
 
 const em = orm.em;
 em.getRepository(Subscription);
 function sanitizedInput(req: Request, res: Response, next: NextFunction) {
-
   req.body.sanitizedInput = {
     description: req.body.description,
     duration: req.body.duration,
@@ -25,7 +21,6 @@ function sanitizedInput(req: Request, res: Response, next: NextFunction) {
   });
   next();
 }
-
 
 async function findAll(req: Request, res: Response) {
   try {
@@ -63,11 +58,7 @@ async function add(req: Request, res: Response) {
       .json({ message: "Subscription created", data: subscriptionCreated });
   } catch (error: any) {
     if (error instanceof ZodError) {
-      return (
-        res
-          .status(400)
-          .json(error.issues)
-      );
+      return res.status(400).json(error.issues);
     }
     res.status(500).json({ message: error.message });
   }

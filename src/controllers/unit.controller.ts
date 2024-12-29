@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { Unit } from "../entities/unit.entity.js";
+import { Unit } from "../entities";
 import { orm } from "../shared/orm.js";
-import { validateUnit, validateUnitToPatch } from "../schemas/unit.schema.js";
+import { validateUnit, validateUnitToPatch } from "../schemas";
 import { ZodError } from "zod";
 import { EntityManager } from "@mikro-orm/core";
 

@@ -1,10 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { Level } from "../entities/level.entity.js";
+import { Level } from "../entities";
 import { orm } from "../shared/orm.js";
-import {
-  validateLevel,
-  validateLevelToPatch,
-} from "../schemas/level.schema.js";
+import { validateLevel, validateLevelToPatch } from "../schemas";
 import { ZodError } from "zod";
 import { EntityManager } from "@mikro-orm/core";
 

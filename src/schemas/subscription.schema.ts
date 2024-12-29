@@ -9,8 +9,7 @@ const subscriptionSchema = z.object({
     .min(1, "Duration is required"),
   price: z.number({ message: "Invalid price" }).min(1, "Price is required"),
 });
-
-export function validateSubscription(object: any) {
+function validateSubscription(object: any) {
   try {
     return subscriptionSchema.parse(object);
   } catch (error: any) {
@@ -29,10 +28,11 @@ const subscriptionToPatch = z.object({
   isActive: z.boolean().optional(),
 });
 
-export function validateSubscriptionToPatch(object: any) {
+function validateSubscriptionToPatch(object: any) {
   try {
     return subscriptionToPatch.parse(object);
   } catch (error: any) {
     throw error;
   }
 }
+export { validateSubscription, validateSubscriptionToPatch };

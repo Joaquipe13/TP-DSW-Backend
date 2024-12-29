@@ -15,7 +15,7 @@ const unitSchema = z.object({
     .min(1, "Content is required")
     .max(2000, "Name must not exceed 2000 characters"),
 });
-export function validateUnit(object: any) {
+ function validateUnit(object: any) {
   try {
     return unitSchema.parse(object);
   } catch (error: any) {
@@ -39,10 +39,11 @@ const unitToPatch = z.object({
     .optional(),
 });
 
-export function validateUnitToPatch(object: any) {
+function validateUnitToPatch(object: any) {
   try {
     return unitToPatch.parse(object);
   } catch (error: any) {
     throw error;
   }
 }
+export { validateUnit, validateUnitToPatch };
