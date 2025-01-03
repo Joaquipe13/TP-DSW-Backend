@@ -1,3 +1,4 @@
+/* 
 import { Router } from 'express';
 import {
   sanitizeUserInput,
@@ -15,3 +16,4 @@ fileRouter.get('/:id', findOne);
 fileRouter.post('/', sanitizeUserInput, add);
 fileRouter.put('/:id', sanitizeUserInput, update);
 fileRouter.delete('/:id', remove);
+ */

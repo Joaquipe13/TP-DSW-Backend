@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import { CoursePurchaseRecord, Course } from "../entities";
+import { CoursePurchaseRecord, Course } from "../entities/index.js";
 import { orm } from "../shared/orm.js";
 import {
   validateCheckCoursePurchase,
   validateCoursePurchaseRecord,
   validateListPurchases,
   validateSearchByQuery,
-} from "../schemas";
+} from "../schemas/index.js";
 import { ZodError } from "zod";
 
 const em = orm.em;
@@ -76,6 +76,7 @@ async function findAll(req: Request, res: Response) {
     });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
+    return;
   }
 }
 
@@ -93,6 +94,7 @@ async function findOne(req: Request, res: Response) {
     });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
+    return;
   }
 }
 async function add(req: Request, res: Response) {
@@ -114,22 +116,17 @@ async function add(req: Request, res: Response) {
     });
   } catch (error: any) {
     if (error instanceof ZodError) {
-      return res
+      res
         .status(400)
         .json(error.issues.map((issue) => ({ message: issue.message })));
     }
     res.status(500).json({ message: error.message });
+    return;
   }
 }
 async function listUserPurchasedCourses(req: Request, res: Response) {
   try {
-    const userId = Number(req.params.userId);
-
-    if (isNaN(userId) || userId <= 0) {
-      return res.status(400).json({ message: "Invalid userId" });
-    }
-
-    validateListPurchases({ user: userId });
+    const userId = validateListPurchases({ user: req.params.userId });
     const purchasedCourses = await em.find(
       CoursePurchaseRecord,
       { user: { id: userId } },

@@ -7,7 +7,7 @@ import {
   DateTimeType,
 } from "@mikro-orm/core";
 import { BaseEntity } from "../shared/baseEntity.entity.js";
-import { SubsPurchaseRecord } from "./subsPurchaseRecord.entity.js";
+import { SubsPurchaseRecord } from "./index.js";
 @Entity()
 export class Subscription extends BaseEntity {
   @Property({ nullable: false })

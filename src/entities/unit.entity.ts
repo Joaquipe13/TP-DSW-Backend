@@ -8,8 +8,7 @@ import {
   PrimaryKey,
 } from "@mikro-orm/core";
 import { BaseEntity } from "../shared/baseEntity.entity.js";
-import { Level } from "./level.entity.js";
-import { File } from "./file.entity.js";
+import { File, Level } from "./index.js";
 
 @Entity()
 export class Unit extends BaseEntity {

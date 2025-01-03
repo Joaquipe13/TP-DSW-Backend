@@ -8,7 +8,7 @@ import {
   Collection,
 } from '@mikro-orm/core';
 import { BaseEntity } from '../shared/baseEntity.entity.js';
-import { Course } from './course.entity.js';
+import { Course } from './index.js';
 
 @Entity()
 export class Topic extends BaseEntity {

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { EntityManager } from "@mikro-orm/core";
-import { User } from "../entities";
-import { validateLoginData } from "../schemas";
+import { User } from "../entities/index.js";
+import { validateLoginData } from "../schemas/index.js";
 import * as z from "zod";
 import { orm } from "../shared/orm.js";
 import { verifyPassword } from "../utils/authUtils.js";
@@ -18,11 +18,10 @@ export const validateLogin = async (req: Request, res: Response) => {
   try {
     const em = orm.em.fork();
 
-    // Valida los datos de inicio de sesión
     const { email, password } = validateLoginData(req.body);
 
     if (email === admin.email && password === admin.password) {
-      return res.status(200).json({
+      res.status(200).json({
         message: "Login successful",
         data: admin,
       });
@@ -30,27 +29,28 @@ export const validateLogin = async (req: Request, res: Response) => {
     const user = await em.findOne(User, { email });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return;
     }
 
     const passwordMatch = await verifyPassword(user.password, password);
 
     if (!passwordMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      res.status(401).json({ message: "Invalid credentials" });
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       message: "Login successful",
       data: user,
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Validation error",
         errors: error.errors,
       });
     }
     console.error("Error during login:", error);
-    return res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ message: "Internal server error" });
   }
 };

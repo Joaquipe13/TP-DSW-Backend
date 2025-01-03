@@ -7,7 +7,7 @@ import {
   Rel,
 } from "@mikro-orm/core";
 import { BaseEntity } from "../shared/baseEntity.entity.js";
-import { User } from "./user.entity.js";
+import { User } from "./index.js";
 
 @Entity()
 export abstract class PurchaseRecord extends BaseEntity {
@@ -21,4 +21,7 @@ export abstract class PurchaseRecord extends BaseEntity {
 
   @Property({ type: DateTimeType, nullable: true })
   purchaseAt? = new Date();
+
+  @Property({ type: DateTimeType, nullable: true })
+  effectiveAt? = new Date();
 }

@@ -8,8 +8,7 @@ import {
   Cascade,
 } from "@mikro-orm/core";
 import { BaseEntity } from "../shared/baseEntity.entity.js";
-import { Course } from "./course.entity.js";
-import { Unit } from "./unit.entity.js";
+import { Unit, Course } from "./index.js";
 
 @Entity()
 export class Level extends BaseEntity {

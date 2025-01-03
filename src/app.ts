@@ -14,7 +14,7 @@ import {
   courseRouter,
   coursePurchaseRecordRouter,
   topicRouter,
-} from "./routes";
+} from "./routes/index.js";
 
 dotenv.config();
 
@@ -27,7 +27,6 @@ const PORT = 3000;
 app.use((req, res, next) => {
   RequestContext.create(orm.em, next);
 });
-
 
 app.use(express.json());
 

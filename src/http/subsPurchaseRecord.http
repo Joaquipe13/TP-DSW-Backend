@@ -1,34 +1,32 @@
 ### get all purchaseRecords
-GET http://localhost:3000/api/subscriptions/purchaseRecords
+GET http://localhost:3000/api/subsPurchaseRecords
 
 ### create new purchaseRecord
 # @name createPurchaseRecord
-POST http://localhost:3000/api/subscriptions/purchaseRecords
+POST http://localhost:3000/api/subsPurchaseRecords
 Content-Type: application/json 
 
 {
-  "montoTotal": 3000,
-  "user": 1,
-  "course": 1
+  "user": 14,
+  "subscription": 6
 }
 ###ID
 @id = {{createPurchaseRecord.response.body.data.id}} 
 ### get purchaseRecord by id
-GET http://localhost:3000/api/subscriptions/purchaseRecords/{{id}}
+GET http://localhost:3000/api/subsPurchaseRecords/{{id}}
 
 ### Edit/modify purchaseRecord (PUT - recurso completo/objeto con estado final)
-PUT http://localhost:3000/api/subscriptions/purchaseRecords/{{id}}
+PUT http://localhost:3000/api/subsPurchaseRecords/{{id}}
 Content-Type: application/json
 
 {
-  "montoTotal": 7000,
   "user": [1],
   "subscription": [1]
 }
 
 ### Post a purchaseRecord
 # @name createPurchaseRecordToDelete
-POST http://localhost:3000/api/subscriptions/purchaseRecords
+POST http://localhost:3000/api/subsPurchaseRecords
 Content-Type: application/json 
 
 {
@@ -38,7 +36,7 @@ Content-Type: application/json
 
 @idToDelete = {{createPurchaseRecordToDelete.response.body.data.id}}
 ### delete purchaseRecord
-DELETE http://localhost:3000/api/subscriptions/purchaseRecords/{{idToDelete}}
+DELETE http://localhost:3000/api/subsPurchaseRecords/{{idToDelete}}
 
 
 
@@ -48,7 +46,7 @@ DELETE http://localhost:3000/api/subscriptions/purchaseRecords/{{idToDelete}}
 
 
 ### Edit/modify purchaseRecord (PATCH - Modificaciones parciales/modificaciones incrementales)
-PATCH http://localhost:3000/api/subscriptions/purchaseRecords/1
+PATCH http://localhost:3000/api/subsPurchaseRecords/1
 Content-Type: application/json
 
 {
@@ -56,4 +54,4 @@ Content-Type: application/json
 }
 
 ### delete purchaseRecord
-DELETE http://localhost:3000/api/subscriptions/purchaseRecords/1
+DELETE http://localhost:3000/api/subsPurchaseRecords/1

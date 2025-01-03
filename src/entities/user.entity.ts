@@ -7,7 +7,7 @@ import {
   Collection,
 } from "@mikro-orm/core";
 import { BaseEntity } from "../shared/baseEntity.entity.js";
-import { PurchaseRecord } from "./purchaseRecord.entity.js";
+import { PurchaseRecord } from "./index.js";
 
 @Entity()
 export class User extends BaseEntity {

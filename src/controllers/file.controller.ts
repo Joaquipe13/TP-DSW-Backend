@@ -1,8 +1,8 @@
-import { Request, Response, NextFunction } from 'express';
-import { File } from '../entities/file.entity.js';
-import { orm } from '../shared/orm.js';
-import { fileSchema } from '../schemas/file.schema.js';
-import { ZodError } from 'zod';
+/* import { Request, Response, NextFunction } from "express";
+import { File } from "../entities/index";
+import { orm } from "../shared/orm.js";
+import { fileSchema } from "../schemas/file.schema.js";
+import { ZodError } from "zod";
 
 const em = orm.em;
 
@@ -25,7 +25,7 @@ async function add(req: Request, res: Response) {
     const parsedData = fileSchema.parse(req.body.sanitizedInput);
     const file = em.create(File, parsedData);
     await em.flush();
-    res.status(201).json({ message: 'file added', data: file });
+    res.status(201).json({ message: "file added", data: file });
   } catch (error: any) {
     if (error instanceof ZodError) {
       return res
@@ -39,7 +39,7 @@ async function add(req: Request, res: Response) {
 async function findAll(req: Request, res: Response) {
   try {
     const files = await em.find(File, {});
-    res.status(200).json({ message: 'found all files', data: files });
+    res.status(200).json({ message: "found all files", data: files });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -49,7 +49,7 @@ async function findOne(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id);
     const file = await em.findOneOrFail(File, { id });
-    res.status(200).json({ message: 'found file', data: file });
+    res.status(200).json({ message: "found file", data: file });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -61,7 +61,7 @@ async function update(req: Request, res: Response) {
     const fileToUpdate = await em.findOneOrFail(File, { id });
     em.assign(fileToUpdate, req.body.sanitizedInput);
     await em.flush();
-    res.status(200).json({ message: 'file updated', data: fileToUpdate });
+    res.status(200).json({ message: "file updated", data: fileToUpdate });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -78,3 +78,4 @@ async function remove(req: Request, res: Response) {
 }
 
 export { sanitizeUserInput, findAll, findOne, add, update, remove };
+ */

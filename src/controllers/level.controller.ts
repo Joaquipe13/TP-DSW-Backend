@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { Level } from "../entities";
+import { Level } from "../entities/index.js";
 import { orm } from "../shared/orm.js";
-import { validateLevel, validateLevelToPatch } from "../schemas";
+import { validateLevel, validateLevelToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { EntityManager } from "@mikro-orm/core";
 
@@ -76,7 +76,7 @@ async function add(req: Request, res: Response) {
     res.status(201).json({ message: "Level created", data: { createdLevel } });
   } catch (error: any) {
     if (error instanceof ZodError) {
-      return res
+      res
         .status(400)
         .json(error.issues.map((issue) => ({ message: issue.message })));
     }
@@ -120,7 +120,7 @@ async function update(req: Request, res: Response) {
     res.status(200).json({ message: "Level updated", data: level });
   } catch (error: any) {
     if (error instanceof ZodError) {
-      return res
+      res
         .status(400)
         .json(error.issues.map((issue) => ({ message: issue.message })));
     }

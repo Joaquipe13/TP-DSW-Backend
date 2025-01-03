@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { User } from "../entities";
+import { User } from "../entities/index.js";
 import { orm } from "../shared/orm.js";
-import { validateUser, validateUserToPatch } from "../schemas";
+import { validateUser, validateUserToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { encryptPassword } from "../utils/authUtils.js";
 
@@ -50,14 +50,14 @@ async function add(req: Request, res: Response) {
   try {
     const validUser = validateUser(req.body.sanitizedInput);
     if (validUser instanceof ZodError) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "Validation failed",
         errors: validUser,
       });
     }
     const existingUser = await em.findOne(User, { email: validUser.email });
     if (existingUser) {
-      return res.status(400).json({
+      res.status(400).json({
         message: "User with this email already exists",
       });
     }
@@ -73,7 +73,7 @@ async function add(req: Request, res: Response) {
     });
   } catch (error: any) {
     if (error instanceof ZodError) {
-      return res
+      res
         .status(400)
         .json(error.issues.map((issue) => ({ message: issue.message })));
     }

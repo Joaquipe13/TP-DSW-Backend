@@ -1,15 +1,15 @@
 import { Request, Response, NextFunction } from "express";
-import { Course, Topic } from "./../entities";
 import { orm } from "./../shared/orm.js";
 import {
   validateCourse,
   validateCourseToPatch,
   validateSearchByTitle,
-} from "./../schemas/course.schema.js";
+} from "./../schemas/index.js";
 import { ZodError } from "zod";
-import { CoursePurchaseRecord } from "../entities/coursePurchaseRecord.entity.js";
+import { CoursePurchaseRecord, Course, Topic } from "../entities/index.js";
+
 const em = orm.em;
-em.getRepository(Course);
+
 function sanitizeCourseInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     title: req.body.title,
@@ -34,7 +34,7 @@ function sanitizeSearchInput(req: Request) {
     if (queryResult[key] === undefined) {
       delete queryResult[key];
     } else if (key === "title") {
-      queryResult[key] = { $like: `%${queryResult[key].trim()}%` }; // Sanitizar y preparar para consulta
+      queryResult[key] = { $like: `%${queryResult[key].trim()}%` };
     }
   });
 
@@ -44,13 +44,9 @@ function sanitizeSearchInput(req: Request) {
 async function findAll(req: Request, res: Response) {
   try {
     const sanitizedQuery = sanitizeSearchInput(req);
-
-    const courses = await em.find(
-      Course,
-      sanitizedQuery, // Pasa sanitizedQuery directamente
-      { populate: ["topics", "levels"] }
-    );
-
+    const courses = await em.find(Course, sanitizedQuery, {
+      populate: ["topics", "levels"],
+    });
     res.status(200).json({ message: "Found all courses", data: courses });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
@@ -65,7 +61,7 @@ async function findOne(req: Request, res: Response) {
       { id },
       { populate: ["topics", "levels"] }
     );
-    res.status(200).json({ message: "found course", data: course });
+    res.status(200).json({ message: "Found course", data: course });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -86,9 +82,10 @@ async function add(req: Request, res: Response) {
       .json({ message: "Course created", data: { courseCreated } });
   } catch (error: any) {
     if (error instanceof ZodError) {
-      return res
+      res
         .status(400)
         .json(error.issues.map((issue) => ({ message: issue.message })));
+      return;
     }
     res.status(500).send({ message: error.message });
   }
@@ -104,26 +101,18 @@ async function update(req: Request, res: Response) {
         ? validateCourseToPatch(req.body.sanitizedInput)
         : validateCourse(req.body.sanitizedInput);
 
-    // Verificar si la propiedad `topics` está presente en la solicitud
     if (courseUpdated.topics && Array.isArray(courseUpdated.topics)) {
-      // Obtener las instancias de `Topic` por los IDs proporcionados
       const topics = await em.find(Topic, {
         id: { $in: courseUpdated.topics },
       });
-
-      // Verificar que todos los IDs proporcionados correspondan a un `Topic` válido
       if (topics.length !== courseUpdated.topics.length) {
-        return res
-          .status(400)
-          .json({ message: "Some topics could not be found." });
+        res.status(400).json({ message: "Some topics could not be found." });
+        return;
       }
-
-      // Asignar las instancias de `Topic` a la propiedad `topics`
-      const updatedTopics = topics.map((topic) => topic.id); // Extraemos los IDs de los topics
-      courseUpdated.topics = updatedTopics; // Ahora pasamos instancias de Topic, no solo los IDs
+      const updatedTopics = topics.map((topic) => topic.id);
+      courseUpdated.topics = updatedTopics;
     }
 
-    // Asignar los datos validados al curso
     em.assign(course, courseUpdated);
     await em.flush();
 
@@ -143,7 +132,7 @@ async function remove(req: Request, res: Response) {
     if (purchaseRecordCount > 0) {
       course.isActive = false;
       await em.flush();
-      return res.status(200).json({ message: "Course deactivated" });
+      res.status(200).json({ message: "Course deactivated" });
     } else {
       await em.removeAndFlush(course);
       res.status(204).json({ message: "Course deleted" });

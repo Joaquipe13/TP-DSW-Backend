@@ -66,18 +66,15 @@ function validateSearchByQuery(object: any) {
 }
 
 const listPurchasesSchema = z.object({
-    user: z.coerce.number().int().positive(),
-  });
-  
-  function validateListPurchases(object: any) {
-    try {
-      return listPurchasesSchema.parse(object);
-    } catch (error: any) {
-      throw error;
-    }
-  }
+  user: z.coerce.number().int().positive(),
+});
 
-  export {
-    validateListPurchases,
-    validateSearchByQuery,
-  };
+function validateListPurchases(object: any) {
+  try {
+    return listPurchasesSchema.parse(object).user;
+  } catch (error: any) {
+    throw error;
+  }
+}
+
+export { validateListPurchases, validateSearchByQuery };

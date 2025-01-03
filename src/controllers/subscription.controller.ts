@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
-import { Subscription } from "../entities";
+import { Subscription, SubsPurchaseRecord } from "../entities/index.js";
 import { orm } from "../shared/orm.js";
-import { validateSubscription, validateSubscriptionToPatch } from "../schemas";
+import { validateSubscription, validateSubscriptionToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
-import { SubsPurchaseRecord } from "../entities/subsPurchaseRecord.entity.js";
 
 const em = orm.em;
 em.getRepository(Subscription);
@@ -58,7 +57,7 @@ async function add(req: Request, res: Response) {
       .json({ message: "Subscription created", data: subscriptionCreated });
   } catch (error: any) {
     if (error instanceof ZodError) {
-      return res.status(400).json(error.issues);
+      res.status(400).json(error.issues);
     }
     res.status(500).json({ message: error.message });
   }
@@ -92,7 +91,7 @@ async function remove(req: Request, res: Response) {
     if (purchaseRecordCount > 0) {
       subscription.isActive = false;
       await em.flush();
-      return res.status(200).json({ message: "Subscription deactivated" });
+      res.status(200).json({ message: "Subscription deactivated" });
     } else {
       await em.removeAndFlush(subscription);
       res.status(204).json({ message: "Subscription deleted" });

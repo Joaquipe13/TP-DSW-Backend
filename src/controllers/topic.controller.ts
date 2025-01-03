@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { Topic } from "../entities";
+import { Topic } from "../entities/index.js";
 import { orm } from "../shared/orm.js";
-import { validatedTopic } from "../schemas";
+import { validatedTopic } from "../schemas/index.js";
 import { ZodError } from "zod";
 
 const em = orm.em;
@@ -26,7 +26,7 @@ async function add(req: Request, res: Response) {
     res.status(201).json({ message: "Topic created", data: topicCreated });
   } catch (error: any) {
     if (error instanceof ZodError) {
-      return res
+      res
         .status(400)
         .json(error.issues.map((issue) => ({ message: issue.message })));
     }
@@ -57,7 +57,7 @@ async function remove(req: Request, res: Response) {
     const id = Number.parseInt(req.params.id);
     const topic = await em.findOneOrFail(Topic, id, { populate: ["courses"] });
     if (topic.courses.length > 0) {
-      return res.status(400).json({
+      res.status(400).json({
         message:
           "Cannot delete Topic as it is associated with one or more Courses.",
       });

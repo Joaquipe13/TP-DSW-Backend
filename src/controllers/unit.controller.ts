@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import { Unit } from "../entities";
+import { Unit } from "../entities/index.js";
 import { orm } from "../shared/orm.js";
-import { validateUnit, validateUnitToPatch } from "../schemas";
+import { validateUnit, validateUnitToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { EntityManager } from "@mikro-orm/core";
 
@@ -67,7 +67,7 @@ async function add(req: Request, res: Response) {
     res.status(201).json({ message: "unit created", data: createdUnit });
   } catch (error: any) {
     if (error instanceof ZodError) {
-      return res
+      res
         .status(400)
         .json(error.issues.map((issue) => ({ message: issue.message })));
     }
@@ -79,23 +79,21 @@ async function update(req: Request, res: Response) {
     const id = Number.parseInt(req.params.id);
 
     if (isNaN(id)) {
-      return res.status(400).json({ message: "Invalid ID" });
+      res.status(400).json({ message: "Invalid ID" });
     }
 
-    // Obtén la referencia de la unidad
     const unit = await em.findOne(Unit, id);
 
     if (!unit) {
-      return res.status(404).json({ message: "Unit not found" });
+      res.status(404).json({ message: "Unit not found" });
+      return;
     }
 
     let unitUpdated;
 
     if (req.method === "PATCH") {
-      // Validar la entrada antes de procesarla
       unitUpdated = validateUnitToPatch(req.body.sanitizedInput);
 
-      // Si se proporciona un nuevo valor para "order", procesamos la actualización de los órdenes
       if (unitUpdated.order) {
         const originalOrder = unit.order;
         const newOrder = unitUpdated.order;
@@ -103,7 +101,6 @@ async function update(req: Request, res: Response) {
         if (originalOrder !== newOrder) {
           const allUnits = await em.find(Unit, {});
 
-          // Si el nuevo orden es mayor, reducimos el orden de las unidades entre los valores originales y nuevos
           if (newOrder > originalOrder) {
             allUnits.forEach((unit) => {
               if (unit.order > originalOrder && unit.order <= newOrder) {
@@ -120,18 +117,14 @@ async function update(req: Request, res: Response) {
         }
       }
     } else {
-      // Validar la entrada para otros tipos de solicitudes (PUT, por ejemplo)
       unitUpdated = validateUnit(req.body.sanitizedInput);
     }
 
-    // Asignar los nuevos valores a la unidad y guardar
     em.assign(unit, unitUpdated);
     await em.flush();
 
-    // Responder con éxito
     res.status(200).json({ message: "Unit updated", data: unitUpdated });
   } catch (error: any) {
-    // Capturar cualquier error y devolver una respuesta 500
     console.error(error);
     res.status(500).json({ message: error.message });
   }

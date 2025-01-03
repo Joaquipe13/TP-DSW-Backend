@@ -1,14 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import { SubsPurchaseRecord } from "../entities";
+import { SubsPurchaseRecord, Subscription } from "../entities/index.js";
 import { orm } from "../shared/orm.js";
-import { validateSubsPurchaseRecord } from "../schemas";
 import {
   validateListPurchases,
   validateSearchByQuery,
   validateCheckSubsPurchase,
-} from "../schemas";
-import { ZodError } from "zod";
-import { Subscription } from "../entities/subscription.entity.js";
+  validateSubsPurchaseRecord,
+} from "../schemas/index.js";
+import { date, ZodError } from "zod";
 
 const em = orm.em;
 
@@ -18,7 +17,7 @@ em.getRepository(Subscription);
 function sanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     subscription: req.body.subscription,
-    member: req.body.member,
+    user: req.body.user,
   };
 
   Object.keys(req.body.sanitizedInput).forEach((key) => {
@@ -100,12 +99,33 @@ async function add(req: Request, res: Response) {
     const validSubsPurchaseRecord = validateSubsPurchaseRecord(
       req.body.sanitizedInput
     );
+    const purchasedSubs = await em.find(
+      SubsPurchaseRecord,
+      { user: { id: validSubsPurchaseRecord.user } },
+      { populate: ["subscription"], orderBy: { effectiveAt: "DESC" } }
+    );
+    let purchased = false;
+    let expirationDate: number = Date.now();
+    if (purchasedSubs.length > 0) {
+      const firstPurchase = purchasedSubs[0];
+      if (firstPurchase?.effectiveAt && firstPurchase?.subscription?.duration) {
+        expirationDate =
+          firstPurchase.effectiveAt.getTime() +
+          firstPurchase.subscription.duration * 24 * 60 * 60 * 1000;
+        purchased = expirationDate > Date.now();
+      }
+    }
+
+    let effectiveAt =
+      expirationDate > Date.now() ? new Date(expirationDate) : new Date();
+
     const subscriptionId = validSubsPurchaseRecord.subscription;
     const subscription = await em.findOneOrFail(Subscription, subscriptionId);
     const subscriptionPurchaseRecord = em.create(SubsPurchaseRecord, {
       ...validSubsPurchaseRecord,
       totalAmount: subscription.price,
       purchaseAt: new Date(),
+      effectiveAt: effectiveAt,
     });
     await em.flush();
     res.status(201).json({
@@ -114,7 +134,7 @@ async function add(req: Request, res: Response) {
     });
   } catch (error: any) {
     if (error instanceof ZodError) {
-      return res
+      res
         .status(400)
         .json(error.issues.map((issue) => ({ message: issue.message })));
     }
@@ -124,13 +144,7 @@ async function add(req: Request, res: Response) {
 
 async function listUserPurchasedSubs(req: Request, res: Response) {
   try {
-    const userId = Number(req.params.userId);
-
-    if (isNaN(userId) || userId <= 0) {
-      return res.status(400).json({ message: "Invalid userId" });
-    }
-
-    validateListPurchases({ user: userId });
+    const userId = validateListPurchases({ user: req.params.userId });
     const purchasedSubs = await em.find(
       SubsPurchaseRecord,
       { user: { id: userId } },
@@ -150,15 +164,23 @@ async function listUserPurchasedSubs(req: Request, res: Response) {
 }
 async function checkSubsPurchase(req: Request, res: Response) {
   try {
-    const purchase = validateCheckSubsPurchase({
-      user: req.params.userId,
-      subscription: req.params.subscriptionId,
-    });
+    const userId = validateListPurchases({ user: req.params.userId });
+    const purchasedSubs = await em.find(
+      SubsPurchaseRecord,
+      { user: { id: userId } },
+      { populate: ["subscription"], orderBy: { effectiveAt: "DESC" } }
+    );
+    let purchased = false;
+    if (purchasedSubs.length > 0) {
+      const firstPurchase = purchasedSubs[0];
+      if (firstPurchase?.effectiveAt && firstPurchase?.subscription?.duration) {
+        purchased =
+          firstPurchase.effectiveAt.getTime() +
+            firstPurchase.subscription.duration * 24 * 60 * 60 * 1000 >
+          Date.now();
+      }
+    }
 
-    const purchased = await em.findOne(SubsPurchaseRecord, {
-      user: { id: purchase.user },
-      subscription: { id: purchase.subscription },
-    });
     res.status(200).json({
       message: purchased
         ? "Subscription has been purchased by the user"
