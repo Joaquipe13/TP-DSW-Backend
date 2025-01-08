@@ -21,7 +21,7 @@ dotenv.config();
 const app = express();
 
 const PORT = process.env.PORT || 3000;
-const PORT_FE = 5173;
+const PORT_FE = process.env.PORT_FE || 5173;
 const corsOptions = {
   origin: `http://localhost:${PORT_FE}`,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
@@ -29,7 +29,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.use(cors());
+//app.use(cors());
 
 app.use((req, res, next) => {
   RequestContext.create(orm.em, next);
