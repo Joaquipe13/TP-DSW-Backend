@@ -20,12 +20,12 @@ dotenv.config();
 
 const app = express();
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const PORT_FE = 5173;
 const corsOptions = {
-  origin: `http://localhost:${PORT_FE}`, // Permitir solo el puerto especificado
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Métodos HTTP permitidos
-  credentials: true, // Permitir envío de cookies
+  origin: `http://localhost:${PORT_FE}`,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
 };
 
 app.use(cors(corsOptions));
@@ -54,7 +54,6 @@ app.use((_, res) => {
 
 await syncSchema();
 
-//Server
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
