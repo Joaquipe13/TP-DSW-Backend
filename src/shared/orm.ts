@@ -2,11 +2,12 @@ import { MikroORM } from "@mikro-orm/mysql";
 import { SqlHighlighter } from "@mikro-orm/sql-highlighter";
 
 const dbUrl = process.env.DB_HOST || "mysql://root:root@localhost:3306/tp-dsw";
+const dbName = process.env.DB_NAME || "tp-dsw";
 
 export const orm = await MikroORM.init({
   entities: ["dist/**/*.entity.js"],
   entitiesTs: ["src/**/*entity.ts"],
-  dbName: "tp-dsw",
+  dbName: dbName,
   // Change 'type' to 'dbType'
   clientUrl: dbUrl, //"mysql://root:{contraseña}@localhost:{puerto}/tp-dsw"
 
