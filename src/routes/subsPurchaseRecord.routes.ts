@@ -11,7 +11,7 @@ import {
 export const subsPurchaseRecordRouter = Router();
 
 subsPurchaseRecordRouter.get("/user/:userId", listUserPurchasedSubs);
-subsPurchaseRecordRouter.get("/check/:userId/:subsId", checkSubsPurchase);
+subsPurchaseRecordRouter.get("/check/:userId", checkSubsPurchase);
 subsPurchaseRecordRouter.get("/", findAll);
 subsPurchaseRecordRouter.get("/:id", findOne);
 subsPurchaseRecordRouter.post("/", sanitizedInput, add);

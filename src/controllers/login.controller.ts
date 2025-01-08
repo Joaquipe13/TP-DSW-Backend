@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
-import { EntityManager } from "@mikro-orm/core";
 import { User } from "../entities/index.js";
 import { validateLoginData } from "../schemas/index.js";
 import * as z from "zod";
 import { orm } from "../shared/orm.js";
-import { verifyPassword } from "../utils/authUtils.js";
+import { verifyPassword } from "../shared/encryption.js";
 
 const admin = {
   name: "Admin",

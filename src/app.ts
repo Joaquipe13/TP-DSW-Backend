@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import express from "express";
 import dotenv from "dotenv";
-import { orm, syncSchema } from "./shared/orm.js";
+import { orm, syncSchema } from "./shared/index.js";
 import cors from "cors";
 import { RequestContext } from "@mikro-orm/core";
 import {
@@ -21,8 +21,15 @@ dotenv.config();
 const app = express();
 
 const PORT = 3000;
+const PORT_FE = 5173;
+const corsOptions = {
+  origin: `http://localhost:${PORT_FE}`, // Permitir solo el puerto especificado
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE", // Métodos HTTP permitidos
+  credentials: true, // Permitir envío de cookies
+};
 
-//app.use(cors());
+app.use(cors(corsOptions));
+app.use(cors());
 
 app.use((req, res, next) => {
   RequestContext.create(orm.em, next);

@@ -15,4 +15,6 @@ export class SubsPurchaseRecord extends PurchaseRecord {
     nullable: false,
   })
   subscription!: Rel<Subscription>;
+  @Property({ type: DateTimeType, nullable: true })
+  effectiveAt? = new Date();
 }

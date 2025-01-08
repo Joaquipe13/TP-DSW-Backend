@@ -21,7 +21,4 @@ export abstract class PurchaseRecord extends BaseEntity {
 
   @Property({ type: DateTimeType, nullable: true })
   purchaseAt? = new Date();
-
-  @Property({ type: DateTimeType, nullable: true })
-  effectiveAt? = new Date();
 }

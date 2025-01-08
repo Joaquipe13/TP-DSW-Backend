@@ -1,5 +1,5 @@
 ### get all purchaseRecords
-GET http://localhost:3000/api/subsPurchaseRecords
+GET http://localhost:3000/api/subsPurchaseRecords?user=19
 
 ### create new purchaseRecord
 # @name createPurchaseRecord

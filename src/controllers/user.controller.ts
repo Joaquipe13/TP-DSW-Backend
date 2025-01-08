@@ -3,13 +3,12 @@ import { User } from "../entities/index.js";
 import { orm } from "../shared/orm.js";
 import { validateUser, validateUserToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
-import { encryptPassword } from "../utils/authUtils.js";
+import { encryptPassword } from "../shared/encryption.js";
 
 const em = orm.em;
 em.getRepository(User);
 function sanitizeUserInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
-    dni: req.body.dni.padStart(8, "0"),
     name: req.body.name,
     surname: req.body.surname,
     email: req.body.email,
