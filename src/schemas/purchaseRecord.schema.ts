@@ -1,3 +1,4 @@
+import { title } from "process";
 import { z } from "zod";
 
 const searchByQuerySchema = z
@@ -25,6 +26,11 @@ const searchByQuerySchema = z
         }
       ),
     user: z.coerce.number().int().positive().optional(),
+    title: z
+      .string()
+      .min(1, { message: "Title cannot be empty" })
+      .trim()
+      .optional(),
   })
   .refine(
     (data) => {
@@ -39,7 +45,7 @@ const searchByQuerySchema = z
     }
   );
 function validateSearchByQuery(object: any) {
-  if (!object.startDate && !object.endDate && !object.user) {
+  if (!object.startDate && !object.endDate && !object.user && !object.title) {
     return undefined;
   }
   try {
@@ -58,6 +64,9 @@ function validateSearchByQuery(object: any) {
     }
     if (parsedData.user) {
       query.user = parsedData.user;
+    }
+    if (parsedData.title) {
+      query.course = { title: { $like: `%${parsedData.title}%` } };
     }
     return query;
   } catch (error: any) {

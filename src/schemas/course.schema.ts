@@ -6,6 +6,7 @@ const courseSchema = z.object({
   topics: z
     .array(z.number().int().positive())
     .min(1, "At least one topic is required"),
+  resume: z.string().min(1, "Resume is required"),
 });
 
 const courseToPatchSchema = z.object({
@@ -13,6 +14,7 @@ const courseToPatchSchema = z.object({
   price: z.number().optional(),
   topics: z.array(z.number().int().positive()).optional(),
   isActive: z.boolean().optional(),
+  resume: z.string().optional(),
 });
 
 const searchByTitleSchema = z.object({

@@ -16,6 +16,7 @@ function sanitizeCourseInput(req: Request, res: Response, next: NextFunction) {
     price: req.body.price,
     topics: req.body.topics,
     isActive: req.body.isActive,
+    resume: req.body.resume,
   };
   Object.keys(req.body.sanitizedInput).forEach((key) => {
     if (req.body.sanitizedInput[key] === undefined) {

@@ -10,10 +10,7 @@ import {
 
 export const coursePurchaseRecordRouter = Router();
 
-coursePurchaseRecordRouter.get(
-  "/user/:userId/courses",
-  listUserPurchasedCourses
-);
+coursePurchaseRecordRouter.get("/courses", listUserPurchasedCourses);
 coursePurchaseRecordRouter.get("/check/:userId/:courseId", checkCoursePurchase);
 coursePurchaseRecordRouter.get("/", findAll);
 coursePurchaseRecordRouter.get("/:id", findOne);

@@ -20,8 +20,8 @@ dotenv.config();
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
-const PORT_FE = process.env.PORT_FE || 5173;
+const PORT =/*  process.env.PORT ||  */3000;
+const PORT_FE = /* process.env.PORT_FE || */ 5173;
 const corsOptions = {
   origin: `http://localhost:${PORT_FE}`,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",

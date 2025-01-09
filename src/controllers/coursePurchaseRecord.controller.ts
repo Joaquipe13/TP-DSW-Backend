@@ -54,6 +54,12 @@ function sanitizedSearchByQuery(query: any) {
       sanitizedQuery.user = userId;
     }
   }
+  if (query.title) {
+    const title = query.title;
+    if (typeof title === "string") {
+      sanitizedQuery.title = title;
+    }
+  }
   return sanitizedQuery;
 }
 
@@ -126,13 +132,19 @@ async function add(req: Request, res: Response) {
 }
 async function listUserPurchasedCourses(req: Request, res: Response) {
   try {
-    const userId = validateListPurchases({ user: req.params.userId });
+    const sanitizedQuery = sanitizedSearchByQuery(req.query);
+    const validatedQuery = validateSearchByQuery(sanitizedQuery);
     const purchasedCourses = await em.find(
       CoursePurchaseRecord,
-      { user: { id: userId } },
+      validatedQuery,
       { populate: ["course"] }
     );
-    const courses = purchasedCourses.map((record) => record.course);
+    const courses = purchasedCourses
+      .map((record) => record.course)
+      .filter(
+        (course, index, self) =>
+          index === self.findIndex((t) => t.id === course.id)
+      );
     res.status(200).json({
       message: courses.length
         ? "Purchased courses found"

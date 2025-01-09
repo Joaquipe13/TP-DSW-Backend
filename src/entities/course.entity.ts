@@ -20,10 +20,10 @@ export class Course extends BaseEntity {
 
   @Property({ nullable: false, unique: true })
   title!: string;
-  /* 
-    @Property({nullable: false, unique: true})
-    description!: string
- */
+
+  @Property({ nullable: false })
+  resume!: string;
+
   @Property({ type: DateTimeType, nullable: false })
   createdAt = new Date();
 
