@@ -19,9 +19,11 @@ import {
 dotenv.config();
 
 const app = express();
+const port = process.env.PORT || 3000;
+const publicUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
 
-const URL = process.env.RENDER_EXTERNAL_URL || "http://localhost:3000";
 const URL_FE = process.env.URL_FE || "http://localhost:5173";
+
 const corsOptions = {
   origin: URL_FE,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
@@ -54,6 +56,6 @@ app.use((_, res) => {
 
 await syncSchema();
 
-app.listen(URL, () => {
-  console.log(`Server running on ${URL}`);
+app.listen(port, () => {
+  console.log(`Server running on  ${publicUrl}`);
 });

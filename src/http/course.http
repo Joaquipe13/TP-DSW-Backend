@@ -15,7 +15,7 @@ Content-Type: application/json
 }
 
 ### search by tittle
-GET http://localhost:3000/api/courses?title=Priva
+GET http://localhost:3000/api/courses?title=
 
 ### ID
 @id = {{createCourse.response.body.data.id}}
