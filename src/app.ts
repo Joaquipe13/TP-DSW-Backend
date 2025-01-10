@@ -20,7 +20,7 @@ dotenv.config();
 
 const app = express();
 
-const URL = process.env.RENDER_EXTERNAL_URL || 3000;
+const URL = process.env.RENDER_EXTERNAL_URL || "http://localhost:3000";
 const URL_FE = process.env.URL_FE || "http://localhost:5173";
 const corsOptions = {
   origin: URL_FE,
