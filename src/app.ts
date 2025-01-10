@@ -20,10 +20,10 @@ dotenv.config();
 
 const app = express();
 
-const PORT =/*  process.env.PORT ||  */3000;
-const PORT_FE = /* process.env.PORT_FE || */ 5173;
+const URL = process.env.RENDER_EXTERNAL_URL || 3000;
+const URL_FE = process.env.URL_FE || "http://localhost:5173";
 const corsOptions = {
-  origin: `http://localhost:${PORT_FE}`,
+  origin: URL_FE,
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   credentials: true,
 };
@@ -54,6 +54,6 @@ app.use((_, res) => {
 
 await syncSchema();
 
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+app.listen(URL, () => {
+  console.log(`Server running on ${URL}`);
 });

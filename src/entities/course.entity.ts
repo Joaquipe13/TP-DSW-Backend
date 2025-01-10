@@ -18,7 +18,7 @@ export class Course extends BaseEntity {
   @Property({ nullable: false, default: false })
   isActive!: boolean;
 
-  @Property({ nullable: false, unique: true })
+  @Property({ nullable: false, unique: true, length: 50 })
   title!: string;
 
   @Property({ nullable: false })
