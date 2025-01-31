@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { Topic } from "../entities/index.js";
-import { orm } from "../shared/orm.js";
+import { getOrm } from "../shared/orm.js";
 import { validatedTopic } from "../schemas/index.js";
 import { ZodError } from "zod";
 
+const orm = await getOrm();
 const em = orm.em;
 em.getRepository(Topic);
 
-function sanitizedInput(req: Request, res: Response, next: NextFunction) {
+function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     description: req.body.description,
   };
@@ -70,4 +71,4 @@ async function remove(req: Request, res: Response) {
   }
 }
 
-export { sanitizedInput, findAll, findOne, add, remove };
+export { SanitizedInput, findAll, findOne, add, remove };

@@ -6,10 +6,8 @@ import {
   Collection,
   DateTimeType,
   ManyToMany,
-  Rel,
-  ManyToOne,
 } from "@mikro-orm/core";
-import { BaseEntity } from "../shared/baseEntity.entity.js";
+import { BaseEntity } from "./baseEntity.entity.js";
 import { CoursePurchaseRecord } from "./coursePurchaseRecord.entity.js";
 import { Topic } from "./topic.entity.js";
 import { Level } from "./level.entity.js";

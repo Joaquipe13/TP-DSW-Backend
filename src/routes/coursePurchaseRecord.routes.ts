@@ -8,7 +8,7 @@ import {
   checkCoursePurchase,
 } from "../controllers/coursePurchaseRecord.controller.js";
 
-export const coursePurchaseRecordRouter = Router();
+export const coursePurchaseRecordRouter: Router = Router();
 
 coursePurchaseRecordRouter.get("/courses", listUserPurchasedCourses);
 coursePurchaseRecordRouter.get("/check/:userId/:courseId", checkCoursePurchase);

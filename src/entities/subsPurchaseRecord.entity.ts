@@ -1,13 +1,12 @@
 import {
-  Cascade,
   Entity,
-  OneToMany,
   Property,
   DateTimeType,
   ManyToOne,
   Rel,
 } from "@mikro-orm/core";
-import { PurchaseRecord, Subscription } from "./index.js";
+import { PurchaseRecord } from "./purchaseRecord.entity.js";
+import { Subscription } from "./subscription.entity.js";
 
 @Entity()
 export class SubsPurchaseRecord extends PurchaseRecord {
@@ -15,6 +14,6 @@ export class SubsPurchaseRecord extends PurchaseRecord {
     nullable: false,
   })
   subscription!: Rel<Subscription>;
-  @Property({ type: DateTimeType, nullable: true })
+  @Property({ type: DateTimeType, nullable: false })
   effectiveAt? = new Date();
 }

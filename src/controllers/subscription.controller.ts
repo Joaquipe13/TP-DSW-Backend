@@ -1,12 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import { Subscription, SubsPurchaseRecord } from "../entities/index.js";
-import { orm } from "../shared/orm.js";
-import { validateSubscription, validateSubscriptionToPatch } from "../schemas/index.js";
+import { getOrm } from "../shared/orm.js";
+import {
+  validateSubscription,
+  validateSubscriptionToPatch,
+} from "../schemas/index.js";
 import { ZodError } from "zod";
 
+const orm = await getOrm();
 const em = orm.em;
 em.getRepository(Subscription);
-function sanitizedInput(req: Request, res: Response, next: NextFunction) {
+function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     description: req.body.description,
     duration: req.body.duration,
@@ -101,4 +105,4 @@ async function remove(req: Request, res: Response) {
   }
 }
 
-export { findAll, findOne, add, update, remove, sanitizedInput };
+export { findAll, findOne, add, update, remove, SanitizedInput };

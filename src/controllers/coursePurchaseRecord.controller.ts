@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { CoursePurchaseRecord, Course } from "../entities/index.js";
-import { orm } from "../shared/orm.js";
+import { CoursePurchaseRecord, Course, User } from "../entities/index.js";
+import { getOrm } from "../shared/orm.js";
 import {
   validateCheckCoursePurchase,
   validateCoursePurchaseRecord,
@@ -8,10 +8,13 @@ import {
   validateSearchByQuery,
 } from "../schemas/index.js";
 import { ZodError } from "zod";
+import { sendCoursePurchaseReceipt } from "../utils/index.js";
 
+const orm = await getOrm();
 const em = orm.em;
 em.getRepository(CoursePurchaseRecord);
 em.getRepository(Course);
+em.getRepository(User);
 
 function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
@@ -116,8 +119,23 @@ async function add(req: Request, res: Response) {
       purchaseAt: new Date(),
     });
     await em.flush();
+    const user = await em.findOneOrFail(User, coursePurchaseRecord.user);
+    const purchaseDetails = {
+      id: coursePurchaseRecord.id,
+      title: course.title,
+      price: course.price,
+      datePurchase: new Date(),
+    };
+    const email = user.email;
+    const sendEmail: string = await sendCoursePurchaseReceipt(
+      email,
+      purchaseDetails
+    );
     res.status(201).json({
-      message: "Course purchase record created",
+      message:
+        sendEmail === "The email was sent successfully"
+          ? "Course purchase record created and email sent"
+          : sendEmail,
       data: coursePurchaseRecord,
     });
   } catch (error: any) {

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import { orm } from "./../shared/orm.js";
+import { getOrm } from "./../shared/orm.js";
 import {
   validateCourse,
   validateCourseToPatch,
@@ -8,9 +8,10 @@ import {
 import { ZodError } from "zod";
 import { CoursePurchaseRecord, Course, Topic } from "../entities/index.js";
 
+const orm = await getOrm();
 const em = orm.em;
 
-function sanitizeCourseInput(req: Request, res: Response, next: NextFunction) {
+function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     title: req.body.title,
     price: req.body.price,
@@ -48,7 +49,7 @@ async function findAll(req: Request, res: Response) {
     const courses = await em.find(Course, sanitizedQuery, {
       populate: ["topics", "levels"],
     });
-    res.status(200).json({ message: "Found all courses", data: courses });
+    res.status(200).json({ message: "Found all courses", data: { courses } });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -136,11 +137,11 @@ async function remove(req: Request, res: Response) {
       res.status(200).json({ message: "Course deactivated" });
     } else {
       await em.removeAndFlush(course);
-      res.status(204).json({ message: "Course deleted" });
+      res.status(202).json({ message: "Course deleted" });
     }
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
 }
 
-export { findAll, findOne, add, update, remove, sanitizeCourseInput };
+export { findAll, findOne, add, update, remove, SanitizedInput };

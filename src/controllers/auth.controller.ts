@@ -3,11 +3,12 @@ import jwt from "jsonwebtoken";
 import { User } from "../entities/index.js";
 import { validateLoginData } from "../schemas/index.js";
 import * as z from "zod";
-import { orm } from "../shared/orm.js";
+import { getOrm } from "../shared/orm.js";
 import { verifyPassword } from "../shared/encryption.js";
 
 const secret = process.env.JWT_SECRET || "default_secret";
-
+const orm = await getOrm();
+const em = orm.em;
 const generateToken = (payload: object, expiresIn = "8h") => {
   return jwt.sign(payload, secret, { expiresIn });
 };
@@ -23,7 +24,6 @@ const createResponse = (status: string, message: string, data?: any) => ({
   message,
   data,
 });
-const em = orm.em;
 
 const validateCredentials = async (email: string, password: string) => {
   if (email === admin.email && password === admin.password) {
@@ -76,4 +76,3 @@ export const validateLogin = async (req: Request, res: Response) => {
     return;
   }
 };
-

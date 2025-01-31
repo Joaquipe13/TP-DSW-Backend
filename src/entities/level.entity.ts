@@ -7,12 +7,12 @@ import {
   Rel,
   Cascade,
 } from "@mikro-orm/core";
-import { BaseEntity } from "../shared/baseEntity.entity.js";
+import { BaseEntity } from "./baseEntity.entity.js";
 import { Unit, Course } from "./index.js";
 
 @Entity()
 export class Level extends BaseEntity {
-  @Property({ nullable: false, unique: true })
+  @Property({ nullable: false, unique: false })
   name!: string;
 
   @Property({ nullable: false, type: "text" })

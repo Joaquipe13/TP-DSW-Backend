@@ -1,6 +1,5 @@
 export { encryptPassword, verifyPassword } from "./encryption.js";
-export { orm, syncSchema } from "./orm.js";
-export { BaseEntity } from "./baseEntity.entity.js";
+export { getOrm, syncSchema } from "./orm.js";
 export {
   someProtectedHandler,
   authMiddleware,

@@ -10,11 +10,47 @@ const courseSchema = z.object({
 });
 
 const courseToPatchSchema = z.object({
-  title: z.string().optional(),
-  price: z.number().optional(),
-  topics: z.array(z.number().int().positive()).optional(),
-  isActive: z.boolean().optional(),
-  resume: z.string().optional(),
+  title: z
+    .string()
+    .optional()
+    .refine((val) => typeof val === "string" || val === undefined, {
+      message: "Title must be a valid string.",
+    }),
+  price: z
+    .number()
+    .positive()
+    .optional()
+    .refine((val) => val === undefined || val > 0, {
+      message: "Price must be a positive number.",
+    })
+    .refine((val) => typeof val === "number" || val === undefined, {
+      message: "Price must be a valid number.",
+    }),
+
+  topics: z
+    .array(z.number().int().positive())
+    .optional()
+    .refine(
+      (val) =>
+        val === undefined ||
+        (Array.isArray(val) &&
+          val.every((v) => typeof v === "number" && v > 0)),
+      {
+        message: "Each topic must be a positive integer.",
+      }
+    ),
+  isActive: z
+    .boolean()
+    .optional()
+    .refine((val) => typeof val === "boolean" || val === undefined, {
+      message: "Active status must be a boolean value.",
+    }),
+  resume: z
+    .string()
+    .optional()
+    .refine((val) => typeof val === "string" || val === undefined, {
+      message: "Resume must be a valid string.",
+    }),
 });
 
 const searchByTitleSchema = z.object({

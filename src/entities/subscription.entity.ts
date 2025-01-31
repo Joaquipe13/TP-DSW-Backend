@@ -6,7 +6,7 @@ import {
   Collection,
   DateTimeType,
 } from "@mikro-orm/core";
-import { BaseEntity } from "../shared/baseEntity.entity.js";
+import { BaseEntity } from "./baseEntity.entity.js";
 import { SubsPurchaseRecord } from "./index.js";
 @Entity()
 export class Subscription extends BaseEntity {

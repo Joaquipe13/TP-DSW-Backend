@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { Level } from "../entities/index.js";
-import { orm } from "../shared/orm.js";
+import { getOrm } from "../shared/orm.js";
 import { validateLevel, validateLevelToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { EntityManager } from "@mikro-orm/core";
 
-const em: EntityManager = orm.em.fork();
+const orm = await getOrm();
+const em = orm.em;
 em.getRepository(Level);
-function sanitizeLevelInput(req: Request, res: Response, next: NextFunction) {
+function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     name: req.body.name,
     description: req.body.description,
@@ -153,4 +154,4 @@ async function remove(req: Request, res: Response) {
   });
 }
 
-export { sanitizeLevelInput, findAll, findOne, add, update, remove };
+export { SanitizedInput, findAll, findOne, add, update, remove };

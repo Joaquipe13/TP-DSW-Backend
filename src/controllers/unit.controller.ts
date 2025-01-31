@@ -1,14 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { Unit } from "../entities/index.js";
-import { orm } from "../shared/orm.js";
+import { getOrm } from "../shared/orm.js";
 import { validateUnit, validateUnitToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { EntityManager } from "@mikro-orm/core";
 
-const em: EntityManager = orm.em.fork();
+const orm = await getOrm();
+const em = orm.em;
 em.getRepository(Unit);
 
-function sanitizeUnitInput(req: Request, res: Response, next: NextFunction) {
+function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     name: req.body.name,
     content: req.body.content,
@@ -155,4 +156,4 @@ async function remove(req: Request, res: Response) {
   });
 }
 
-export { sanitizeUnitInput, findAll, findOne, add, update, remove };
+export { SanitizedInput, findAll, findOne, add, update, remove };

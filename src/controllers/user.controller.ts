@@ -1,13 +1,14 @@
 import { Request, Response, NextFunction } from "express";
 import { User } from "../entities/index.js";
-import { orm } from "../shared/orm.js";
+import { getOrm } from "../shared/orm.js";
 import { validateUser, validateUserToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { encryptPassword } from "../shared/encryption.js";
 
+const orm = await getOrm();
 const em = orm.em;
 em.getRepository(User);
-function sanitizeUserInput(req: Request, res: Response, next: NextFunction) {
+function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     name: req.body.name,
     surname: req.body.surname,
@@ -106,4 +107,4 @@ async function remove(req: Request, res: Response) {
   }
 }
 
-export { sanitizeUserInput, findAll, findOne, add, update, remove };
+export { SanitizedInput, findAll, findOne, add, update, remove };

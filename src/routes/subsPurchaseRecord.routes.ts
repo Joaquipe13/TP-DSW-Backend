@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  sanitizedInput,
+  SanitizedInput,
   findAll,
   findOne,
   add,
@@ -8,10 +8,10 @@ import {
   checkSubsPurchase,
 } from "../controllers/subsPurchaseRecord.controller.js";
 
-export const subsPurchaseRecordRouter = Router();
+export const subsPurchaseRecordRouter: Router = Router();
 
 subsPurchaseRecordRouter.get("/user/:userId", listUserPurchasedSubs);
 subsPurchaseRecordRouter.get("/check/:userId", checkSubsPurchase);
 subsPurchaseRecordRouter.get("/", findAll);
 subsPurchaseRecordRouter.get("/:id", findOne);
-subsPurchaseRecordRouter.post("/", sanitizedInput, add);
+subsPurchaseRecordRouter.post("/", SanitizedInput, add);

@@ -1,15 +1,15 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
-  sanitizedInput,
+  SanitizedInput,
   findAll,
   findOne,
   add,
   remove,
-} from '../controllers/topic.controller.js';
+} from "../controllers/topic.controller.js";
 
-export const topicRouter = Router();
+export const topicRouter: Router = Router();
 
-topicRouter.get('/', findAll);
-topicRouter.get('/:id', findOne);
-topicRouter.post('/', sanitizedInput, add);
-topicRouter.delete('/:id', remove);
+topicRouter.get("/", findAll);
+topicRouter.get("/:id", findOne);
+topicRouter.post("/", SanitizedInput, add);
+topicRouter.delete("/:id", remove);

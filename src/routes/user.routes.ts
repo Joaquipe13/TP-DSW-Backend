@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  sanitizeUserInput,
+  SanitizedInput,
   findAll,
   findOne,
   add,
@@ -8,10 +8,10 @@ import {
   remove,
 } from "../controllers/user.controller.js";
 
-export const userRouter = Router();
+export const userRouter: Router = Router();
 
 userRouter.get("/", findAll);
 userRouter.get("/:id", findOne);
-userRouter.post("/", sanitizeUserInput, add);
-userRouter.put("/:id", sanitizeUserInput, update);
+userRouter.post("/", SanitizedInput, add);
+userRouter.put("/:id", SanitizedInput, update);
 userRouter.delete("/:id", remove);

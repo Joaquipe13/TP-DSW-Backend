@@ -1,20 +1,23 @@
 import { Request, Response, NextFunction } from "express";
-import { SubsPurchaseRecord, Subscription } from "../entities/index.js";
-import { orm } from "../shared/orm.js";
+import { SubsPurchaseRecord, Subscription, User } from "../entities/index.js";
+import { getOrm } from "../shared/orm.js";
 import {
   validateListPurchases,
   validateSearchByQuery,
   validateCheckSubsPurchase,
   validateSubsPurchaseRecord,
 } from "../schemas/index.js";
-import { date, ZodError } from "zod";
+import { ZodError } from "zod";
+import { sendSubscriptionReceipt } from "../utils/index.js";
 
+const orm = await getOrm();
 const em = orm.em;
 
 em.getRepository(SubsPurchaseRecord);
 em.getRepository(Subscription);
+em.getRepository(User);
 
-function sanitizedInput(req: Request, res: Response, next: NextFunction) {
+function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     subscription: req.body.subscription,
     user: req.body.user,
@@ -115,10 +118,8 @@ async function add(req: Request, res: Response) {
         purchased = expirationDate > Date.now();
       }
     }
-
     let effectiveAt =
       expirationDate > Date.now() ? new Date(expirationDate) : new Date();
-
     const subscriptionId = validSubsPurchaseRecord.subscription;
     const subscription = await em.findOneOrFail(Subscription, subscriptionId);
     const subscriptionPurchaseRecord = em.create(SubsPurchaseRecord, {
@@ -128,8 +129,25 @@ async function add(req: Request, res: Response) {
       effectiveAt: effectiveAt,
     });
     await em.flush();
+    const user = await em.findOneOrFail(User, subscriptionPurchaseRecord.user);
+    const purchaseDetails = {
+      id: subscriptionPurchaseRecord.id,
+      description: subscription.description,
+      duration: subscription.duration,
+      price: subscription.price,
+      datePurchase: new Date(),
+      activateDate: effectiveAt,
+    };
+    const email = user.email;
+    const sendEmail: string = await sendSubscriptionReceipt(
+      email,
+      purchaseDetails
+    );
     res.status(201).json({
-      message: "Subscription purchase record created",
+      message:
+        sendEmail === "The email was sent successfully"
+          ? "Subscription purchase record created and email sent"
+          : sendEmail,
       data: subscriptionPurchaseRecord,
     });
   } catch (error: any) {
@@ -196,7 +214,7 @@ export {
   findAll,
   findOne,
   add,
-  sanitizedInput,
+  SanitizedInput,
   listUserPurchasedSubs,
   checkSubsPurchase,
 };

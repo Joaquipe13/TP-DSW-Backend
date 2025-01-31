@@ -1,7 +1,7 @@
 import "reflect-metadata";
-import express from "express";
+import express, { Express } from "express";
 import dotenv from "dotenv";
-import { orm, syncSchema } from "./shared/index.js";
+import { getOrm, syncSchema } from "./shared/index.js";
 import cors from "cors";
 import { RequestContext } from "@mikro-orm/core";
 import {
@@ -15,14 +15,10 @@ import {
   coursePurchaseRecordRouter,
   topicRouter,
 } from "./routes/index.js";
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-dotenv.config();
-
-const app = express();
-const port = process.env.PORT || 3000;
-const publicUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${port}`;
-
-const URL_FE = process.env.URL_FE || "http://localhost:5173";
+const { NODE_ENV, PUBLIC_URL, PORT, URL_FE } = process.env;
+const app: Express = express();
 
 const corsOptions = {
   origin: URL_FE,
@@ -31,31 +27,38 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-//app.use(cors());
 
-app.use((req, res, next) => {
-  RequestContext.create(orm.em, next);
-});
+const startServer = async () => {
+  const orm = await getOrm();
+  const em = orm.em;
 
-app.use(express.json());
+  app.use((req, res, next) => {
+    RequestContext.create(em, next);
+  });
 
-app.use("/api/subscriptions", subscriptionRouter);
-app.use("/api/subsPurchaseRecords", subsPurchaseRecordRouter);
+  if (NODE_ENV != "test") await syncSchema();
 
-app.use("/api/users", userRouter);
-app.use("/api/levels", levelRouter);
-app.use("/api/units", unitRouter);
-app.use("/api/login", loginRouter);
-app.use("/api/courses", courseRouter);
-app.use("/api/coursePurchaseRecords", coursePurchaseRecordRouter);
-app.use("/api/topics", topicRouter);
+  app.use(express.json());
 
-app.use((_, res) => {
-  res.status(404).send({ message: "Resource not found" });
-});
+  app.use("/api/subscriptions", subscriptionRouter);
+  app.use("/api/subsPurchaseRecords", subsPurchaseRecordRouter);
+  app.use("/api/users", userRouter);
+  app.use("/api/levels", levelRouter);
+  app.use("/api/units", unitRouter);
+  app.use("/api/login", loginRouter);
+  app.use("/api/courses", courseRouter);
+  app.use("/api/coursePurchaseRecords", coursePurchaseRecordRouter);
+  app.use("/api/topics", topicRouter);
 
-await syncSchema();
+  app.use((_, res) => {
+    res.status(404).send({ message: "Resource not found" });
+  });
 
-app.listen(port, () => {
-  console.log(`Server running on  ${publicUrl}`);
-});
+  app.listen(PORT, () => {
+    console.log(`Server running on  ${PUBLIC_URL}, NODE_ENV: ${NODE_ENV}`);
+  });
+};
+
+startServer();
+
+export default app;

@@ -2,21 +2,24 @@ import { Request, Response } from "express";
 import { User } from "../entities/index.js";
 import { validateLoginData } from "../schemas/index.js";
 import * as z from "zod";
-import { orm } from "../shared/orm.js";
+import { getOrm } from "../shared/orm.js";
 import { verifyPassword } from "../shared/encryption.js";
+import dotenv from "dotenv";
+
+dotenv.config({ path: ".env.development" });
+const { EMAIL_USER, EMAIL_PASS } = process.env;
 
 const admin = {
   name: "Admin",
   surname: "User",
-  email: "admin@gmail.com",
-  password: "Goku1234",
+  email: EMAIL_USER,
+  password: EMAIL_PASS,
   admin: true,
 };
-
+const orm = await getOrm();
+const em = orm.em;
 export const validateLogin = async (req: Request, res: Response) => {
   try {
-    const em = orm.em.fork();
-
     const { email, password } = validateLoginData(req.body);
 
     if (email === admin.email && password === admin.password) {
@@ -53,5 +56,3 @@ export const validateLogin = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
-
-

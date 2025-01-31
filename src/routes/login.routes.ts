@@ -7,7 +7,7 @@ import {
   // optionalAuthMiddleware,
 } from "../shared/index.js";
 
-export const loginRouter = Router();
+export const loginRouter: Router = Router();
 
 loginRouter.get("/auth", authMiddleware(true), someProtectedHandler);
 loginRouter.post("/revoke-token", authMiddleware(false), revokeToken);

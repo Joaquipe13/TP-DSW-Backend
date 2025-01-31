@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  sanitizeLevelInput,
+  SanitizedInput,
   findAll,
   findOne,
   add,
@@ -8,10 +8,10 @@ import {
   remove,
 } from "../controllers/level.controller.js";
 
-export const levelRouter = Router();
+export const levelRouter: Router = Router();
 levelRouter.get("/:id", findOne);
-levelRouter.post("/", sanitizeLevelInput, add);
+levelRouter.post("/", SanitizedInput, add);
 levelRouter.get("/", findAll);
-levelRouter.patch("/:id", sanitizeLevelInput, update);
-levelRouter.put("/:id", sanitizeLevelInput, update);
+levelRouter.patch("/:id", SanitizedInput, update);
+levelRouter.put("/:id", SanitizedInput, update);
 levelRouter.delete("/:id", remove);

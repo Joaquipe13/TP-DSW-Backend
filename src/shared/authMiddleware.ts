@@ -1,7 +1,12 @@
+import dotenv from "dotenv";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const secret = process.env.JWT_SECRET || "default_secret";
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+
+const { JWT_SECRET } = process.env;
+
+const secret = JWT_SECRET || "default_secret";
 
 interface JwtPayload {
   id: number;

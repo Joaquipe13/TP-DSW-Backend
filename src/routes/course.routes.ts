@@ -1,6 +1,6 @@
 import { Router } from "express";
 import {
-  sanitizeCourseInput,
+  SanitizedInput,
   findAll,
   findOne,
   add,
@@ -8,11 +8,11 @@ import {
   remove,
 } from "./../controllers/course.controller.js";
 
-export const courseRouter = Router();
+export const courseRouter: Router = Router();
 
 courseRouter.get("/:id", findOne);
 courseRouter.get("/", findAll);
-courseRouter.post("/", sanitizeCourseInput, add);
-courseRouter.patch("/:id", sanitizeCourseInput, update);
-courseRouter.put("/:id", sanitizeCourseInput, update);
+courseRouter.post("/", SanitizedInput, add);
+courseRouter.patch("/:id", SanitizedInput, update);
+courseRouter.put("/:id", SanitizedInput, update);
 courseRouter.delete("/:id", remove);
