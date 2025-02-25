@@ -1,4 +1,7 @@
 export {
   sendCoursePurchaseReceipt,
   sendSubscriptionReceipt,
-} from "./sendEmail.utils.js";
+  sendConfirmationEmail,
+} from "./sendEmail.js";
+export { generateSessionToken } from "./generateSessionToken.js";
+export { createResponse } from "./createResponse.js";

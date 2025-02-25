@@ -8,7 +8,8 @@ import {
   validateSubsPurchaseRecord,
 } from "../schemas/index.js";
 import { ZodError } from "zod";
-import { sendSubscriptionReceipt } from "../utils/index.js";
+import { createResponse, sendSubscriptionReceipt } from "../utils/index.js";
+import { create } from "domain";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -72,12 +73,17 @@ async function findAll(req: Request, res: Response) {
       validatedQuery,
       { populate: ["subscription", "user"] }
     );
-    res.json({
-      message: "found all subsPurchaseRecords",
-      data: subsPurchaseRecords,
-    });
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          "found all subsPurchaseRecords",
+          subsPurchaseRecords
+        )
+      );
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -91,9 +97,15 @@ async function findOne(req: Request, res: Response) {
     );
     res
       .status(200)
-      .json({ message: "found subsPurchaseRecord", data: subsPurchaseRecord });
+      .json(
+        createResponse(
+          "Success",
+          "found subsPurchaseRecord",
+          subsPurchaseRecord
+        )
+      );
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -143,20 +155,14 @@ async function add(req: Request, res: Response) {
       email,
       purchaseDetails
     );
-    res.status(201).json({
-      message:
-        sendEmail === "The email was sent successfully"
-          ? "Subscription purchase record created and email sent"
-          : sendEmail,
-      data: subscriptionPurchaseRecord,
-    });
+    res
+      .status(201)
+      .json(createResponse("Success", sendEmail, subscriptionPurchaseRecord));
   } catch (error: any) {
     if (error instanceof ZodError) {
-      res
-        .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+      res.status(400).json(createResponse("Bad Request", error.issues));
     }
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -169,15 +175,19 @@ async function listUserPurchasedSubs(req: Request, res: Response) {
       { populate: ["subscription"] }
     );
     const subs = purchasedSubs.map((record) => record.subscription);
-    res.status(200).json({
-      message: subs.length
-        ? "Purchased subscriptions found"
-        : "No purchased subscriptions were found",
-      data: subs,
-    });
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          subs.length
+            ? "Purchased subscriptions found"
+            : "No purchased subscriptions were found",
+          subs
+        )
+      );
   } catch (error: any) {
-    console.error("Error retrieving purchased subscriptions:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function checkSubsPurchase(req: Request, res: Response) {
@@ -198,16 +208,19 @@ async function checkSubsPurchase(req: Request, res: Response) {
           Date.now();
       }
     }
-
-    res.status(200).json({
-      message: purchased
-        ? "Subscription has been purchased by the user"
-        : "Subscription has not been purchased by the user",
-      purchased: !!purchased,
-    });
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          purchased
+            ? "Subscription has been purchased by the user"
+            : "Subscription has not been purchased by the user",
+          !!purchased
+        )
+      );
   } catch (error: any) {
-    console.error("Error verifying subscription purchase:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 export {

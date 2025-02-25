@@ -6,6 +6,8 @@ import {
   validateSubscriptionToPatch,
 } from "../schemas/index.js";
 import { ZodError } from "zod";
+import { create } from "domain";
+import { createResponse } from "../utils/createResponse.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -28,9 +30,13 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
 async function findAll(req: Request, res: Response) {
   try {
     const subscriptions = await em.find(Subscription, {});
-    res.json({ message: "found all subscriptions", data: subscriptions });
+    res
+      .status(200)
+      .json(
+        createResponse("Success", "found all subscriptions", subscriptions)
+      );
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -42,9 +48,11 @@ async function findOne(req: Request, res: Response) {
       { id },
       { populate: ["subsPurchaseRecords"] }
     );
-    res.status(200).json({ message: "found subscription", data: subscription });
+    res
+      .status(200)
+      .json(createResponse("Success", "found subscription", subscription));
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function add(req: Request, res: Response) {
@@ -58,12 +66,14 @@ async function add(req: Request, res: Response) {
     const subscriptionCreated = em.getReference(Subscription, subscription.id);
     res
       .status(201)
-      .json({ message: "Subscription created", data: subscriptionCreated });
+      .json(
+        createResponse("Success", "Subscription created", subscriptionCreated)
+      );
   } catch (error: any) {
     if (error instanceof ZodError) {
-      res.status(400).json(error.issues);
+      res.status(400).json(createResponse("Bad Request", error.issues));
     }
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -77,11 +87,9 @@ async function update(req: Request, res: Response) {
         : validateSubscription(req.body.sanitizedInput);
     em.assign(subscription, subscriptionUpdated);
     await em.flush();
-    res
-      .status(200)
-      .json({ message: "Subscription updated", data: subscription });
+    res.status(200).json(createResponse("Success", "Subscription updated"));
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -95,13 +103,15 @@ async function remove(req: Request, res: Response) {
     if (purchaseRecordCount > 0) {
       subscription.isActive = false;
       await em.flush();
-      res.status(200).json({ message: "Subscription deactivated" });
+      res
+        .status(200)
+        .json(createResponse("Success", "Subscription deactivated"));
     } else {
       await em.removeAndFlush(subscription);
-      res.status(204).json({ message: "Subscription deleted" });
+      res.status(204).json(createResponse("Success", "Subscription deleted"));
     }
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 

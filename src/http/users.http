@@ -1,6 +1,7 @@
 ### get all users
 GET http://localhost:3000/api/users
 
+
 ### POST new user
 # @name createUser
 POST http://localhost:3000/api/users
@@ -10,14 +11,20 @@ Content-Type: application/json
   "dni": "56748981",
   "name": "Tirone",
   "surname": "Gonzales",
-  "email": "ag3dg@gmail.com",
+  "email": "joaquinfds13@gmail.com",
   "password": "12345678",
   "admin": false
 }
 ### ID
 @id = {{createUser.response.body.data.id}}
 ### get user by id
-GET http://localhost:3000/api/users/{{id}}
+GET http://localhost:3000/api/users/confirm?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyRGF0YSI6eyJuYW1lIjoiVGlyb25lIiwic3VybmFtZSI6IkdvbnphbGVzIiwiZW1haWwiOiJqb2FxdWluZmRzMTNAZ21haWwuY29tIiwicGFzc3dvcmQiOiIxMjM0NTY3OCIsImFkbWluIjpmYWxzZX0sImlhdCI6MTc0MDQ0ODQ0OSwiZXhwIjoxNzQwNDUyMDQ5fQ.hjGdi2PONRMeDfxZgQFjBgP8lxrzzWeX11O1C2FqNLA
+
+### get user by id
+GET http://localhost:3000/api/users/confirm
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyRGF0YSI6eyJuYW1lIjoiVGlyb25lIiwic3VybmFtZSI6IkdvbnphbGVzIiwiZW1haWwiOiJqb2FxdWluZmRzQGdtYWlsLmNvbSIsInBhc3N3b3JkIjoiMTIzNDU2NzgiLCJhZG1pbiI6ZmFsc2V9LCJpYXQiOjE3NDA0OTIzMzksImV4cCI6MTc0MDQ5NTkzOX0.GFbQrO6dYGSyEcaKt3xIV4fB2zb59CaXQWH9h08lrp4
+Content-Type: application/json
+Credentials: include
 
 ### Edit/modify user (PUT - recurso completo/objeto con estado final)
 PUT http://localhost:3000/api/users/{{id}}
@@ -53,3 +60,4 @@ Content-Type: application/json
   "email": "updatedemail@gmail.com"
 
 }
+http://localhost:5173/confirm/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyRGF0YSI6eyJuYW1lIjoiVGlyb25lIiwic3VybmFtZSI6IkdvbnphbGVzIiwiZW1haWwiOiJqb2FxdWluZmRzMTNAZ21haWwuY29tIiwicGFzc3dvcmQiOiIxMjM0NTY3OCIsImFkbWluIjpmYWxzZX0sImlhdCI6MTc0MDQ0ODQ0OSwiZXhwIjoxNzQwNDUyMDQ5fQ.hjGdi2PONRMeDfxZgQFjBgP8lxrzzWeX11O1C2FqNLA

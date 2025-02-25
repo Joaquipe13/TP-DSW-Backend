@@ -3,7 +3,7 @@ import { Unit } from "../entities/index.js";
 import { getOrm } from "../shared/orm.js";
 import { validateUnit, validateUnitToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
-import { EntityManager } from "@mikro-orm/core";
+import { createResponse } from "../utils/createResponse.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -42,9 +42,9 @@ async function findAll(req: Request, res: Response) {
   try {
     const sanitizedQuery = sanitizeSearchInput(req);
     const units = await em.find(Unit, sanitizedQuery);
-    res.status(200).json({ message: "found all units", data: units });
+    res.status(200).json(createResponse("Success", "found all units", units));
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -52,9 +52,9 @@ async function findOne(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id);
     const unit = await em.findOneOrFail(Unit, { id }, { populate: ["level"] });
-    res.status(200).json({ message: "found unit", data: unit });
+    res.status(200).json(createResponse("Success", "found unit", unit));
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function add(req: Request, res: Response) {
@@ -65,14 +65,14 @@ async function add(req: Request, res: Response) {
     const unit = em.create(Unit, { ...validUnit, order: order + 1 });
     await em.flush();
     const createdUnit = em.getReference(Unit, unit.id);
-    res.status(201).json({ message: "unit created", data: createdUnit });
+    res
+      .status(201)
+      .json(createResponse("Success", "unit created", createdUnit));
   } catch (error: any) {
     if (error instanceof ZodError) {
-      res
-        .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+      res.status(400).json(createResponse("Bad Request", error.issues));
     }
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function update(req: Request, res: Response) {
@@ -80,13 +80,13 @@ async function update(req: Request, res: Response) {
     const id = Number.parseInt(req.params.id);
 
     if (isNaN(id)) {
-      res.status(400).json({ message: "Invalid ID" });
+      res.status(400).json(createResponse("Bad Request", "Invalid ID"));
     }
 
     const unit = await em.findOne(Unit, id);
 
     if (!unit) {
-      res.status(404).json({ message: "Unit not found" });
+      res.status(400).json(createResponse("Bad Request", "Unit not found"));
       return;
     }
 
@@ -123,11 +123,12 @@ async function update(req: Request, res: Response) {
 
     em.assign(unit, unitUpdated);
     await em.flush();
-
-    res.status(200).json({ message: "Unit updated", data: unitUpdated });
+    res
+      .status(200)
+      .json(createResponse("Success", "Unit updated", unitUpdated));
   } catch (error: any) {
     console.error(error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -151,7 +152,7 @@ async function remove(req: Request, res: Response) {
       await em.flush();
       res.status(204).send();
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json(createResponse("Error", error.message));
     }
   });
 }

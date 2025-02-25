@@ -1,9 +1,10 @@
 import {
   generateCourseReceiptHTML,
   generateSubscriptionReceiptHTML,
+  generateConfirmationEmail,
   SubscriptionDetails,
   CourseDetails,
-} from "./generateEmail.utils.js";
+} from "./generateEmail.js";
 import nodemailers from "nodemailer";
 import dotenv from "dotenv";
 
@@ -69,5 +70,16 @@ async function sendSubscriptionReceipt(
     return "Error sending email";
   }
 }
+async function sendConfirmationEmail(
+  userEmail: string,
+  token: string
+): Promise<string> {
+  const emailContent = generateConfirmationEmail(token);
 
-export { sendCoursePurchaseReceipt, sendSubscriptionReceipt };
+  return await sendEmail(userEmail, "Confirm your account", emailContent);
+}
+export {
+  sendCoursePurchaseReceipt,
+  sendSubscriptionReceipt,
+  sendConfirmationEmail,
+};

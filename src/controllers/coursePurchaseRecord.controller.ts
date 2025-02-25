@@ -8,7 +8,7 @@ import {
   validateSearchByQuery,
 } from "../schemas/index.js";
 import { ZodError } from "zod";
-import { sendCoursePurchaseReceipt } from "../utils/index.js";
+import { createResponse, sendCoursePurchaseReceipt } from "../utils/index.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -78,14 +78,13 @@ async function findAll(req: Request, res: Response) {
         populate: ["course", "user"],
       }
     );
-
-    res.json({
-      message: "found all coursePurchaseRecords",
-      data: { coursePurchaseRecords },
-    });
+    res.status(200).json(
+      createResponse("Success", "Found all coursePurchaseRecords", {
+        coursePurchaseRecords,
+      })
+    );
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
-    return;
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -97,13 +96,17 @@ async function findOne(req: Request, res: Response) {
       { id },
       { populate: ["course", "user"] }
     );
-    res.status(200).json({
-      message: "found coursePurchaseRecord",
-      data: coursePurchaseRecord,
-    });
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          "Found coursePurchaseRecord",
+          coursePurchaseRecord
+        )
+      );
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
-    return;
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function add(req: Request, res: Response) {
@@ -131,21 +134,25 @@ async function add(req: Request, res: Response) {
       email,
       purchaseDetails
     );
-    res.status(201).json({
-      message:
-        sendEmail === "The email was sent successfully"
-          ? "Course purchase record created and email sent"
-          : sendEmail,
-      data: coursePurchaseRecord,
-    });
+    res
+      .status(201)
+      .json(
+        createResponse(
+          "Success",
+          sendEmail === "The email was sent successfully"
+            ? "Course purchase record created and email sent"
+            : sendEmail,
+          coursePurchaseRecord
+        )
+      );
   } catch (error: any) {
     if (error instanceof ZodError) {
       res
         .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+        .json(createResponse("Bad Request", "Validation error", error.issues));
+
+      return;
     }
-    res.status(500).json({ message: error.message });
-    return;
   }
 }
 async function listUserPurchasedCourses(req: Request, res: Response) {
@@ -163,15 +170,20 @@ async function listUserPurchasedCourses(req: Request, res: Response) {
         (course, index, self) =>
           index === self.findIndex((t) => t.id === course.id)
       );
-    res.status(200).json({
-      message: courses.length
-        ? "Purchased courses found"
-        : "No purchased courses were found",
-      data: courses,
-    });
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          courses.length
+            ? "Purchased courses found"
+            : "No purchased courses were found",
+          courses
+        )
+      );
   } catch (error: any) {
     console.error("Error retrieving purchased courses:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function checkCoursePurchase(req: Request, res: Response) {
@@ -185,15 +197,20 @@ async function checkCoursePurchase(req: Request, res: Response) {
       user: { id: purchase.user },
       course: { id: purchase.course },
     });
-    res.status(200).json({
-      message: purchased
-        ? "Course has been purchased by the user"
-        : "Course has not been purchased by the user",
-      purchased: !!purchased,
-    });
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          purchased
+            ? "Course has been purchased by the user"
+            : "Course has not been purchased by the user",
+          { purchased: !!purchased }
+        )
+      );
   } catch (error: any) {
     console.error("Error verifying course purchase:", error);
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 export {

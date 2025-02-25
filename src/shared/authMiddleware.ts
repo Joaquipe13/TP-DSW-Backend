@@ -9,11 +9,14 @@ const { JWT_SECRET } = process.env;
 const secret = JWT_SECRET || "default_secret";
 
 interface JwtPayload {
-  id: number;
-  name: string;
-  surname: string;
-  email: string;
-  admin: boolean;
+  userData: {
+    id: number;
+    name: string;
+    surname: string;
+    password: string;
+    email: string;
+    admin: boolean;
+  };
 }
 
 export const someProtectedHandler = (req: Request, res: Response) => {
@@ -96,6 +99,42 @@ export const authMiddleware =
       } else {
         console.warn("Invalid token in optionalAuthMiddleware");
       }
+    }
+
+    next();
+  };
+export const createUserMiddleware =
+  () =>
+  (req: Request, res: Response, next: NextFunction): void => {
+    const authHeader = req.headers.authorization;
+
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      res.status(401).json({
+        status: "error",
+        message: "No token provided or invalid format",
+      });
+      return;
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    try {
+      const decoded = jwt.verify(token, secret) as JwtPayload;
+      req.userData = {
+        name: decoded.userData.name,
+        surname: decoded.userData.surname,
+        password: decoded.userData.password,
+        email: decoded.userData.email,
+        admin: decoded.userData.admin ?? false,
+      };
+      console.log("userData", req.userData);
+      console.log("decoded", decoded);
+    } catch (error) {
+      res.status(401).json({
+        status: "error",
+        message: "Invalid or expired token",
+      });
+      return;
     }
 
     next();

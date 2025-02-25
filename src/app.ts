@@ -17,7 +17,16 @@ import {
 } from "./routes/index.js";
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-const { NODE_ENV, PUBLIC_URL, PORT, URL_FE, DB_HOST, DB_NAME } = process.env;
+const {
+  NODE_ENV,
+  PUBLIC_URL,
+  PORT,
+  URL_FE,
+  DB_HOST,
+  DB_NAME,
+  EMAIL_USER,
+  EMAIL_PASS,
+} = process.env;
 const app: Express = express();
 
 const corsOptions = {
@@ -56,7 +65,7 @@ const startServer = async () => {
 
   app.listen(PORT, () => {
     console.log(
-      `Server running on  ${PUBLIC_URL}, NODE_ENV: ${NODE_ENV}, URL_FE: ${URL_FE}, PORT: ${PORT}, DB_HOST: ${DB_HOST}, DB_NAME: ${DB_NAME}`
+      `Server running on  ${PUBLIC_URL}, NODE_ENV: ${NODE_ENV}, URL_FE: ${URL_FE}, PORT: ${PORT}, DB_HOST: ${DB_HOST}, DB_NAME: ${DB_NAME}, EMAIL_USER: ${EMAIL_USER}, EMAIL_PASS: ${EMAIL_PASS}`
     );
   });
 };

@@ -3,6 +3,8 @@ import { Topic } from "../entities/index.js";
 import { getOrm } from "../shared/orm.js";
 import { validatedTopic } from "../schemas/index.js";
 import { ZodError } from "zod";
+import { create } from "domain";
+import { createResponse } from "../utils/createResponse.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -24,23 +26,25 @@ async function add(req: Request, res: Response) {
     const parsedData = validatedTopic(req.body.sanitizedInput);
     const topicCreated = em.create(Topic, parsedData);
     await em.flush();
-    res.status(201).json({ message: "Topic created", data: topicCreated });
+    res
+      .status(201)
+      .json(createResponse("Success", "Topic created", topicCreated));
   } catch (error: any) {
     if (error instanceof ZodError) {
-      res
-        .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+      res.status(400).json(createResponse("Bad Request", error.issues));
     }
-    res.status(500).send({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function findAll(req: Request, res: Response) {
   try {
     const topics = await em.find(Topic, {});
-    res.json({ message: "Finded all topics", data: topics });
+    res
+      .status(200)
+      .json(createResponse("Success", "Finded all topics", topics));
   } catch (error: any) {
-    res.status(500).json({ message: "Error finding topics" });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -48,9 +52,9 @@ async function findOne(req: Request, res: Response) {
   try {
     const id = Number.parseInt(req.params.id);
     const topic = await em.findOneOrFail(Topic, { id });
-    res.status(200).json({ message: "Finded topic", data: topic });
+    res.status(200).json(createResponse("Success", "Finded topic", topic));
   } catch (error: any) {
-    res.status(500).send({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function remove(req: Request, res: Response) {
@@ -58,16 +62,22 @@ async function remove(req: Request, res: Response) {
     const id = Number.parseInt(req.params.id);
     const topic = await em.findOneOrFail(Topic, id, { populate: ["courses"] });
     if (topic.courses.length > 0) {
-      res.status(400).json({
-        message:
-          "Cannot delete Topic as it is associated with one or more Courses.",
-      });
+      res
+        .status(400)
+        .json(
+          createResponse(
+            "Bad Request",
+            "Cannot delete Topic as it is associated with one or more Courses."
+          )
+        );
     }
     em.remove(topic);
     await em.flush();
-    res.status(200).json({ message: "Topic deleted successfully." });
+    res
+      .status(200)
+      .json(createResponse("Success", "Topic deleted successfully."));
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 

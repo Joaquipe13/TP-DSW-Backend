@@ -5,9 +5,20 @@ Credentials: include
 
 
 {
-  "email": "joaquinfds13@gmail.com",
+  "email": "joaquinfds@gmail.com",
   "password": "12345678"
 }
+
+###tokndfd
+POST http://localhost:3000/api/login
+Content-Type: application/json
+Credentials: include
+
+{
+  "email": "learnspheredsw@gmail.com",
+  "password": "zvlkfuoipifslkpj"
+}
+
 ###tokn
 POST http://localhost:3000/api/login
 Content-Type: application/json
@@ -19,7 +30,7 @@ Content-Type: application/json
 
 ###token
 GET http://localhost:3000/api/login/auth
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MCwibmFtZSI6IkFkbWluIiwic3VybmFtZSI6IlVzZXIiLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImFkbWluIjp0cnVlLCJpYXQiOjE3MzY0MjQzMDcsImV4cCI6MTczNjQ1MzEwN30.6lzPRy46mnJOlpEd7gxwN-c8wiNFUX6RPIrb_NuMdps
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9hcXXDrW4gQ2FybG9zIiwic3VybmFtZSI6IkZlcm5hbmRleiBEYSBTaWx2YSIsImVtYWlsIjoiam9hcXVpbmZkczEzQGdtYWlsLmNvbSIsInBhc3N3b3JkIjoiJGFyZ29uMmlkJHY9MTkkbT02NTUzNix0PTMscD00JDFmcGcxKzdRbzExZXo0NkhMbTdaRHckWGlscnljV0xzdXBQeFZBOS9SbEZ0QitibjRBMmZqVjJmSm9hWWd3bmhISSIsImFkbWluIjpmYWxzZSwiaWF0IjoxNzQwNDIyODAxLCJleHAiOjE3NDA0NTE2MDF9.70ISSSULjoRK6GCe85oEMjmknG3sqn0WjVRpWy5HFTA
 Content-Type: application/json
 Credentials: include
 

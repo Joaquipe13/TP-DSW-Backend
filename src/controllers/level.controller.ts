@@ -4,6 +4,7 @@ import { getOrm } from "../shared/orm.js";
 import { validateLevel, validateLevelToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { EntityManager } from "@mikro-orm/core";
+import { createResponse } from "../utils/createResponse.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -44,9 +45,9 @@ async function findAll(req: Request, res: Response) {
     const levels = await em.find(Level, sanitizedQuery, {
       populate: ["units"],
     });
-    res.json({ message: "found all levels", data: levels });
+    res.json(createResponse("Success", "found all levels", levels));
   } catch (error: any) {
-    res.status(500).json({ message: "Error finding Levels" });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -61,9 +62,9 @@ async function findOne(req: Request, res: Response) {
     if (level.units) {
       level.units.getItems().sort((a, b) => a.order - b.order);
     }
-    res.status(200).json({ message: "found level", data: level });
+    res.status(200).json(createResponse("Success", "found level", level));
   } catch (error: any) {
-    res.status(500).send({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function add(req: Request, res: Response) {
@@ -74,14 +75,19 @@ async function add(req: Request, res: Response) {
     const level = em.create(Level, { ...validLevel, order: order + 1 });
     await em.flush();
     const createdLevel = em.getReference(Level, level.id);
-    res.status(201).json({ message: "Level created", data: { createdLevel } });
+    res
+      .status(201)
+      .json(createResponse("Success", "Level created", createdLevel));
   } catch (error: any) {
     if (error instanceof ZodError) {
-      res
-        .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+      res.status(400).json(
+        createResponse(
+          "Bad Request",
+          error.issues.map((issue) => ({ message: issue.message }))
+        )
+      );
     }
-    res.status(500).send({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -118,14 +124,12 @@ async function update(req: Request, res: Response) {
     }
     em.assign(level, levelUpdated);
     await em.flush();
-    res.status(200).json({ message: "Level updated", data: level });
+    res.status(200).json(createResponse("Success", "Level updated", level));
   } catch (error: any) {
     if (error instanceof ZodError) {
-      res
-        .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+      res.status(400).json(createResponse("Bad Request", error.issues));
     }
-    res.status(500).send({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -145,11 +149,10 @@ async function remove(req: Request, res: Response) {
         u.order -= 1;
         em.persist(u);
       }
-
       await em.flush();
       res.status(204).send();
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json(createResponse("Error", error.message));
     }
   });
 }
