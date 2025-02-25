@@ -49,7 +49,7 @@ async function findAll(req: Request, res: Response) {
     const courses = await em.find(Course, sanitizedQuery, {
       populate: ["topics", "levels"],
     });
-    res.status(200).json({ message: "Found all courses", data: { courses } });
+    res.status(200).json({ message: "Found all courses", data: courses });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
