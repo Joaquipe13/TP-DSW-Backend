@@ -1,29 +1,24 @@
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
 import { User } from "../entities/index.js";
 import { validateLoginData } from "../schemas/index.js";
 import * as z from "zod";
 import { getOrm } from "../shared/orm.js";
 import { verifyPassword } from "../shared/encryption.js";
+import dotenv from "dotenv";
+import { generateSessionToken, createResponse } from "../utils/index.js";
 
-const secret = process.env.JWT_SECRET || "default_secret";
+dotenv.config({ path: process.env.NODE_ENV });
+const { EMAIL_USER, EMAIL_PASS } = process.env;
 const orm = await getOrm();
 const em = orm.em;
-const generateToken = (payload: object, expiresIn = "8h") => {
-  return jwt.sign(payload, secret, { expiresIn });
-};
+
 const admin = {
   name: process.env.ADMIN_NAME || "Admin",
   surname: process.env.ADMIN_SURNAME || "User",
-  email: process.env.ADMIN_EMAIL || "admin@gmail.com",
-  password: process.env.ADMIN_PASSWORD || "Goku1234",
+  email: EMAIL_USER || "admin@gmail.com",
+  password: EMAIL_PASS || "Goku1234",
   admin: true,
 };
-const createResponse = (status: string, message: string, data?: any) => ({
-  status,
-  message,
-  data,
-});
 
 const validateCredentials = async (email: string, password: string) => {
   if (email === admin.email && password === admin.password) {
@@ -31,6 +26,7 @@ const validateCredentials = async (email: string, password: string) => {
       id: 0,
       name: admin.name,
       surname: admin.surname,
+      password: "",
       email: admin.email,
       admin: true,
     };
@@ -45,6 +41,7 @@ const validateCredentials = async (email: string, password: string) => {
     id: user.id,
     name: user.name,
     surname: user.surname,
+    password: "",
     email: user.email,
     admin: user.admin,
   };
@@ -53,26 +50,24 @@ export const validateLogin = async (req: Request, res: Response) => {
   try {
     const { email, password } = validateLoginData(req.body);
     const userData = await validateCredentials(email, password);
-    const token = generateToken(userData);
+    const sessionToken = generateSessionToken(userData);
     res
       .status(200)
-      .json(createResponse("success", "Login successful", { token }));
+      .json(createResponse("Success", "Login successful", sessionToken));
     return;
   } catch (error: any | z.ZodError) {
     if (error instanceof z.ZodError) {
       res
         .status(400)
-        .json(createResponse("error", "Validation error", error.errors));
+        .json(createResponse("Bad Request", "Validation error", error.errors));
       return;
     }
-
     if (error.message === "Invalid credentials") {
-      res.status(401).json(createResponse("error", "Invalid credentials"));
+      res
+        .status(401)
+        .json(createResponse("Bad Request", "Invalid credentials"));
       return;
     }
-
-    console.error("Error during login:", error);
-    res.status(500).json(createResponse("error", "Internal server error"));
-    return;
+    res.status(500).json(createResponse("Error", "Internal server error"));
   }
 };

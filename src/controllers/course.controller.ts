@@ -7,6 +7,7 @@ import {
 } from "./../schemas/index.js";
 import { ZodError } from "zod";
 import { CoursePurchaseRecord, Course, Topic } from "../entities/index.js";
+import { createResponse } from "../utils/createResponse.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -49,9 +50,11 @@ async function findAll(req: Request, res: Response) {
     const courses = await em.find(Course, sanitizedQuery, {
       populate: ["topics", "levels"],
     });
-    res.status(200).json({ message: "Found all courses", data: courses });
+    res
+      .status(200)
+      .json(createResponse("Success", "Found all courses", courses));
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -63,9 +66,9 @@ async function findOne(req: Request, res: Response) {
       { id },
       { populate: ["topics", "levels"] }
     );
-    res.status(200).json({ message: "Found course", data: course });
+    res.status(200).json(createResponse("Success", "Found course", course));
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -81,15 +84,15 @@ async function add(req: Request, res: Response) {
     const courseCreated = em.getReference(Course, course.id);
     res
       .status(201)
-      .json({ message: "Course created", data: { courseCreated } });
+      .json(createResponse("Success", "Course created", courseCreated));
   } catch (error: any) {
     if (error instanceof ZodError) {
       res
         .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+        .json(createResponse("Bad Request", "Validation error", error.issues));
       return;
     }
-    res.status(500).send({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -108,7 +111,11 @@ async function update(req: Request, res: Response) {
         id: { $in: courseUpdated.topics },
       });
       if (topics.length !== courseUpdated.topics.length) {
-        res.status(400).json({ message: "Some topics could not be found." });
+        res
+          .status(400)
+          .json(
+            createResponse("Bad Request", "Some topics could not be found.")
+          );
         return;
       }
       const updatedTopics = topics.map((topic) => topic.id);
@@ -118,9 +125,9 @@ async function update(req: Request, res: Response) {
     em.assign(course, courseUpdated);
     await em.flush();
 
-    res.status(200).json({ message: "Course updated", data: course });
+    res.status(200).json(createResponse("Success", "Course updated", course));
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
@@ -134,13 +141,13 @@ async function remove(req: Request, res: Response) {
     if (purchaseRecordCount > 0) {
       course.isActive = false;
       await em.flush();
-      res.status(200).json({ message: "Course deactivated" });
+      res.status(204).json(createResponse("Success", "Course deactivated"));
     } else {
       await em.removeAndFlush(course);
-      res.status(202).json({ message: "Course deleted" });
+      res.status(204).json(createResponse("Success", "Course deleted"));
     }
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
