@@ -8,19 +8,20 @@ import dotenv from "dotenv";
 import { generateSessionToken, createResponse } from "../utils/index.js";
 
 dotenv.config({ path: process.env.NODE_ENV });
-const { EMAIL_USER, EMAIL_PASS } = process.env;
+const { EMAIL_USER, EMAIL_PASS, ADMIN_SURNAME, ADMIN_NAME } = process.env;
 const orm = await getOrm();
 const em = orm.em;
 
 const admin = {
-  name: process.env.ADMIN_NAME || "Admin",
-  surname: process.env.ADMIN_SURNAME || "User",
+  name: ADMIN_NAME || "Admin",
+  surname: ADMIN_SURNAME || "User",
   email: EMAIL_USER || "admin@gmail.com",
   password: EMAIL_PASS || "Goku1234",
   admin: true,
 };
 
 const validateCredentials = async (email: string, password: string) => {
+  console.log("email: ", email, "password: ", password);
   if (email === admin.email && password === admin.password) {
     return {
       id: 0,
@@ -54,7 +55,7 @@ export const validateLogin = async (req: Request, res: Response) => {
     res
       .status(200)
       .json(createResponse("Success", "Login successful", sessionToken));
-    return;
+    console.log("Login successful");
   } catch (error: any | z.ZodError) {
     if (error instanceof z.ZodError) {
       res

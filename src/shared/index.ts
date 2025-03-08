@@ -4,5 +4,5 @@ export {
   someProtectedHandler,
   authMiddleware,
   revokeToken,
-  //optionalAuthMiddleware,
+  createUserMiddleware,
 } from "./authMiddleware.js";

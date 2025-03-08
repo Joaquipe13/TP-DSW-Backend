@@ -1,21 +1,43 @@
 import {
   generateCourseReceiptHTML,
   generateSubscriptionReceiptHTML,
+  generateConfirmationEmail,
   SubscriptionDetails,
   CourseDetails,
-} from "./generateEmail.utils.js";
+} from "./generateEmail.js";
 import nodemailers from "nodemailer";
 import dotenv from "dotenv";
 
 dotenv.config({ path: ".env.development" });
 const { EMAIL_HOST, EMAIL_USER, EMAIL_PASS } = process.env;
+
+async function verifyEmail(email: string): Promise<boolean> {
+  try {
+    const urlAPI = "";
+    if (urlAPI == "") {
+      return true;
+    }
+    const response = await fetch(urlAPI);
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+    const data = await response.json();
+    return data.deliverability === "DELIVERABLE";
+  } catch (error) {
+    console.error("Error verifying email:", error);
+    return false;
+  }
+}
 const transporter = nodemailers.createTransport({
   host: EMAIL_HOST,
   port: 587,
   secure: false,
   auth: {
     user: EMAIL_USER,
-    pass: EMAIL_PASS,
+    pass: "mnnmgkzpdhrdcgxp",
+  },
+  tls: {
+    rejectUnauthorized: false,
   },
 });
 
@@ -70,4 +92,20 @@ async function sendSubscriptionReceipt(
   }
 }
 
-export { sendCoursePurchaseReceipt, sendSubscriptionReceipt };
+async function sendConfirmationEmail(
+  userEmail: string,
+  token: string
+): Promise<string> {
+  if (!(await verifyEmail(userEmail))) {
+    console.error(userEmail, ": Invalid email address");
+    throw new Error("Invalid email address");
+  }
+  const emailContent = generateConfirmationEmail(token);
+
+  return await sendEmail(userEmail, "Confirm your account", emailContent);
+}
+export {
+  sendCoursePurchaseReceipt,
+  sendSubscriptionReceipt,
+  sendConfirmationEmail,
+};

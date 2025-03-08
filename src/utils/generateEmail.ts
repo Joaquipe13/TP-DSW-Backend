@@ -1,3 +1,7 @@
+import dotenv from "dotenv";
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+
+const { URL_FE } = process.env;
 type SubscriptionDetails = {
   id: Number;
   description: String;
@@ -77,9 +81,18 @@ function generateSubscriptionReceiptHTML(
 </div>
     `;
 }
+function generateConfirmationEmail(token: string) {
+  const confirmationLink: string = `${URL_FE}/confirm/${token}`;
+  const emailContent: string = `
+    <h1>Confirm your account</h1>
+    <p>Click <a href="${confirmationLink}">here</a> to confirm your registration.</p>
+  `;
+  return emailContent;
+}
 export {
   generateCourseReceiptHTML,
   generateSubscriptionReceiptHTML,
+  generateConfirmationEmail,
   SubscriptionDetails,
   CourseDetails,
 };

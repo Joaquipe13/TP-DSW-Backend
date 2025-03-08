@@ -10,6 +10,7 @@ Content-Type: application/json
   "user": 19,
   "subscription": 7
 }
+
 ###ID
 @id = {{createPurchaseRecord.response.body.data.id}} 
 ### get purchaseRecord by id
