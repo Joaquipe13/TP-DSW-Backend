@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { Level } from "../entities/index.js";
-import { getOrm } from "../shared/orm.js";
+import { getOrm, isAuthorized } from "../shared/index.js";
 import { validateLevel, validateLevelToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
-import { EntityManager } from "@mikro-orm/core";
 import { createResponse } from "../utils/createResponse.js";
 
 const orm = await getOrm();
@@ -69,6 +68,7 @@ async function findOne(req: Request, res: Response) {
 }
 async function add(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const validLevel = validateLevel(req.body.sanitizedInput);
     const courseId = validLevel.course;
     const order = await em.count(Level, { course: courseId });
@@ -90,6 +90,7 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const id = Number.parseInt(req.params.id);
     const level = em.getReference(Level, id);
     let levelUpdated;
@@ -135,6 +136,10 @@ async function update(req: Request, res: Response) {
 async function remove(req: Request, res: Response) {
   await em.transactional(async (em) => {
     try {
+      if (!isAuthorized(req, res)) {
+        await em.rollback();
+        return;
+      }
       const id = Number.parseInt(req.params.id);
       const level = await em.findOneOrFail(Level, { id });
       const course = level.course;

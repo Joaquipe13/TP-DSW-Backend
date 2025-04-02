@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { CoursePurchaseRecord, Course, User } from "../entities/index.js";
-import { getOrm } from "../shared/orm.js";
+import { getOrm, isAuthorized } from "../shared/index.js";
 import {
   validateCheckCoursePurchase,
   validateCoursePurchaseRecord,
@@ -69,6 +69,10 @@ function sanitizedSearchByQuery(query: any) {
 async function findAll(req: Request, res: Response) {
   try {
     const sanitizedQuery = sanitizedSearchByQuery(req.query);
+    if (sanitizedQuery?.user !== undefined && !isAuthorized(req, res)) {
+      return;
+    }
+
     const validatedQuery = validateSearchByQuery(sanitizedQuery);
 
     const coursePurchaseRecords = await em.find(
@@ -190,6 +194,7 @@ async function listUserPurchasedCourses(req: Request, res: Response) {
 }
 async function checkCoursePurchase(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const purchase = validateCheckCoursePurchase({
       user: req.params.userId,
       course: req.params.courseId,

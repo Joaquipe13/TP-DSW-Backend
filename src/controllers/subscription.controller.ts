@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { Subscription, SubsPurchaseRecord } from "../entities/index.js";
-import { getOrm } from "../shared/orm.js";
 import {
   validateSubscription,
   validateSubscriptionToPatch,
 } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { createResponse } from "../utils/createResponse.js";
+import { isAuthorized, getOrm } from "../shared/index.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -56,6 +56,7 @@ async function findOne(req: Request, res: Response) {
 }
 async function add(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const validSubscription = validateSubscription(req.body.sanitizedInput);
     const subscription = em.create(Subscription, {
       ...validSubscription,
@@ -78,6 +79,7 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const id = Number.parseInt(req.params.id);
     const subscription = em.getReference(Subscription, id);
     const subscriptionUpdated =
@@ -96,6 +98,7 @@ async function update(req: Request, res: Response) {
 
 async function remove(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const id = Number.parseInt(req.params.id);
     const subscription = em.getReference(Subscription, id);
     const purchaseRecordCount = await em.count(SubsPurchaseRecord, {

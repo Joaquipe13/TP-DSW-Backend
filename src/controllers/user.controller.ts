@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { User } from "../entities/index.js";
-import { getOrm } from "../shared/orm.js";
+import { getOrm, isAuthorized } from "../shared/index.js";
 import { validateUser, validateUserToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { encryptPassword } from "../shared/encryption.js";
@@ -27,6 +27,7 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
 
 async function findAll(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const users = await em.find(User, {}, { populate: ["purchaseRecords"] });
     res.status(200).json(createResponse("Success", "found all users", users));
   } catch (error: any) {

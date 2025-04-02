@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Topic } from "../entities/index.js";
-import { getOrm } from "../shared/orm.js";
+import { getOrm, isAuthorized } from "../shared/index.js";
 import { validatedTopic } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { createResponse } from "../utils/createResponse.js";
@@ -22,6 +22,7 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
 
 async function add(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const parsedData = validatedTopic(req.body.sanitizedInput);
     const topicCreated = em.create(Topic, parsedData);
     await em.flush();
@@ -60,6 +61,7 @@ async function findOne(req: Request, res: Response) {
 }
 async function remove(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const id = Number.parseInt(req.params.id);
     const topic = await em.findOneOrFail(Topic, id, { populate: ["courses"] });
     if (topic.courses.length > 0) {

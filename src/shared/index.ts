@@ -5,4 +5,5 @@ export {
   authMiddleware,
   revokeToken,
   isAuthorized,
+  validateRole,
 } from "./authMiddleware.js";

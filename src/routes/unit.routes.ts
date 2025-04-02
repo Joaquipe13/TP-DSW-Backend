@@ -7,12 +7,13 @@ import {
   update,
   remove,
 } from "../controllers/unit.controller.js";
+import { authMiddleware } from "../shared/authMiddleware.js";
 
 export const unitRouter: Router = Router();
 
-unitRouter.get("/", findAll);
-unitRouter.get("/:id", findOne);
-unitRouter.post("/", SanitizedInput, add);
-unitRouter.put("/:id", SanitizedInput, update);
-unitRouter.patch("/:id", SanitizedInput, update);
-unitRouter.delete("/:id", remove);
+unitRouter.get("/", authMiddleware(true), findAll);
+unitRouter.get("/:id", authMiddleware(true), findOne);
+unitRouter.post("/", authMiddleware(true), SanitizedInput, add);
+unitRouter.put("/:id", authMiddleware(true), SanitizedInput, update);
+unitRouter.patch("/:id", authMiddleware(true), SanitizedInput, update);
+unitRouter.delete("/:id", authMiddleware(true), remove);

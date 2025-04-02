@@ -6,10 +6,11 @@ import {
   add,
   remove,
 } from "../controllers/topic.controller.js";
+import { authMiddleware } from "../shared/index.js";
 
 export const topicRouter: Router = Router();
 
-topicRouter.get("/", findAll);
-topicRouter.get("/:id", findOne);
-topicRouter.post("/", SanitizedInput, add);
-topicRouter.delete("/:id", remove);
+topicRouter.get("/", authMiddleware(true), findAll);
+topicRouter.get("/:id", authMiddleware(true), findOne);
+topicRouter.post("/", authMiddleware(true), SanitizedInput, add);
+topicRouter.delete("/:id", authMiddleware(true), remove);

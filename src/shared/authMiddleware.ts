@@ -20,7 +20,16 @@ interface JwtPayload {
     admin: boolean;
   };
 }
-
+export const validateRole = (req: Request, res: Response) => {
+  if (!req.userData) {
+    res.status(403).json(createResponse("Bad Request", "User not authorized"));
+    return;
+  }
+  const role = req.userData.admin ? "admin" : "user";
+  res
+    .status(200)
+    .json(createResponse("Success", "Role validated successfully", role));
+};
 export const someProtectedHandler = (req: Request, res: Response): void => {
   console.log("Usuario en req.user:", req.userData);
 

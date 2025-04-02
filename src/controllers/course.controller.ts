@@ -61,7 +61,7 @@ async function findAll(req: Request, res: Response) {
 
 async function findOne(req: Request, res: Response) {
   try {
-    if (isAuthorized(req, res)) return;
+    if (!isAuthorized(req, res)) return;
     const purchased: boolean = await checkUserCoursePurchase(req, res);
     if (purchased) return;
     const id = Number.parseInt(req.params.id);

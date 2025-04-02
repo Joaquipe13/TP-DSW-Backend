@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Unit } from "../entities/index.js";
-import { getOrm } from "../shared/orm.js";
+import { getOrm, isAuthorized } from "../shared/index.js";
 import { validateUnit, validateUnitToPatch } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { EntityManager } from "@mikro-orm/core";
@@ -60,6 +60,7 @@ async function findOne(req: Request, res: Response) {
 }
 async function add(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const validUnit = validateUnit(req.body.sanitizedInput);
     const levelId = validUnit.level;
     const order = await em.count(Unit, { level: levelId });
@@ -80,6 +81,7 @@ async function add(req: Request, res: Response) {
 }
 async function update(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const id = Number.parseInt(req.params.id);
 
     if (isNaN(id)) {
@@ -139,6 +141,10 @@ async function update(req: Request, res: Response) {
 async function remove(req: Request, res: Response) {
   await em.transactional(async (em) => {
     try {
+      if (!isAuthorized(req, res)) {
+        await em.rollback();
+        return;
+      }
       const id = Number.parseInt(req.params.id);
       const unit = await em.findOneOrFail(Unit, { id });
       const level = unit.level;

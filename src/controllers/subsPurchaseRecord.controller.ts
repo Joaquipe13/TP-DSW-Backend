@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import { SubsPurchaseRecord, Subscription, User } from "../entities/index.js";
-import { getOrm } from "../shared/orm.js";
 import {
   validateListPurchases,
   validateSearchByQuery,
@@ -9,6 +8,7 @@ import {
 } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { createResponse, sendSubscriptionReceipt } from "../utils/index.js";
+import { getOrm, isAuthorized } from "../shared/index.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -65,6 +65,9 @@ function sanitizedSearchByQuery(query: any) {
 async function findAll(req: Request, res: Response) {
   try {
     const sanitizedQuery = sanitizedSearchByQuery(req.query);
+    if (sanitizedQuery?.user !== undefined && !isAuthorized(req, res)) {
+      return;
+    }
     const validatedQuery = validateSearchByQuery(sanitizedQuery);
 
     const subsPurchaseRecords = await em.find(
