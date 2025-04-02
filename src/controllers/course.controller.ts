@@ -8,6 +8,7 @@ import {
 import { ZodError } from "zod";
 import { CoursePurchaseRecord, Course, Topic } from "../entities/index.js";
 import { createResponse } from "../utils/createResponse.js";
+import { isAuthorized } from "../shared/index.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -60,6 +61,9 @@ async function findAll(req: Request, res: Response) {
 
 async function findOne(req: Request, res: Response) {
   try {
+    if (isAuthorized(req, res)) return;
+    const purchased: boolean = await checkUserCoursePurchase(req, res);
+    if (purchased) return;
     const id = Number.parseInt(req.params.id);
     const course = await em.findOneOrFail(
       Course,
@@ -74,6 +78,7 @@ async function findOne(req: Request, res: Response) {
 
 async function add(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const validCourse = validateCourse(req.body.sanitizedInput);
     const course = em.create(Course, {
       ...validCourse,
@@ -98,6 +103,7 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const id = Number.parseInt(req.params.id);
     const course = await em.findOneOrFail(Course, id);
 
@@ -133,6 +139,7 @@ async function update(req: Request, res: Response) {
 
 async function remove(req: Request, res: Response) {
   try {
+    if (!isAuthorized(req, res)) return;
     const id = Number.parseInt(req.params.id);
     const course = em.getReference(Course, id);
     const purchaseRecordCount = await em.count(CoursePurchaseRecord, {
@@ -148,6 +155,47 @@ async function remove(req: Request, res: Response) {
     }
   } catch (error: any) {
     res.status(500).json(createResponse("Error", error.message));
+  }
+}
+
+async function checkUserCoursePurchase(
+  req: Request,
+  res: Response
+): Promise<boolean> {
+  try {
+    const userId = req.userData?.id;
+    const courseId = req.params.id;
+
+    if (!userId) {
+      res
+        .status(403)
+        .json(createResponse("Bad Request", "User not authorized"));
+      return false;
+    }
+
+    const purchased = await em.findOne(CoursePurchaseRecord, {
+      user: { id: userId },
+      course: { id: courseId },
+    });
+
+    if (!purchased) {
+      res
+        .status(200)
+        .json(
+          createResponse(
+            "Success",
+            "Course has not been purchased by the user",
+            { purchased: false }
+          )
+        );
+      return false;
+    }
+
+    return true;
+  } catch (error: any) {
+    console.error("Error verifying course purchase:", error);
+    res.status(500).json(createResponse("Error", error.message));
+    return false;
   }
 }
 

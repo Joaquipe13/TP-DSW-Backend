@@ -4,7 +4,6 @@ import {
   someProtectedHandler,
   authMiddleware,
   revokeToken,
-  // optionalAuthMiddleware,
 } from "../shared/index.js";
 
 export const loginRouter: Router = Router();

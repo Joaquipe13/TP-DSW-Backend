@@ -33,12 +33,10 @@ const transporter = nodemailers.createTransport({
   port: 587,
   secure: false,
   auth: {
-    user: EMAIL_USER,
-    pass: "mnnmgkzpdhrdcgxp",
+    user: "learnspheredsw@gmail.com",
+    pass: "vkfibrhhordwumml",
   },
-  tls: {
-    rejectUnauthorized: false,
-  },
+
 });
 
 async function sendEmail(

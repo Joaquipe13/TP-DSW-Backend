@@ -25,7 +25,7 @@ function generateCourseReceiptHTML(courseDetails: CourseDetails) {
   return `
   <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px; border-radius: 10px;">
   <h1 style="text-align: center; color: #4CAF50;">Course Receipt</h1>
-  <p style="text-align: center; font-size: 14px; color: #777;">Thank you for subscribing! Below are the details of your course:</p>
+  <p style="text-align: center; font-size: 14px; color: #777;">Thank you for your purchase! Below are the details of your course:</p>
   
   <div style="margin: 20px 0; padding: 15px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 5px;">
     <p><b>CoursePurchase ID:</b> ${courseDetails.id}</p>

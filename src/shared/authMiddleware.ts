@@ -28,7 +28,8 @@ export const someProtectedHandler = (req: Request, res: Response): void => {
     res.status(403).json(createResponse("Bad Request", "User not authorized"));
   }
 
-  const { name, surname, email, admin } = req.userData as {
+  const { id, name, surname, email, admin } = req.userData as {
+    id: number;
     name: string;
     surname: string;
     email: string;
@@ -37,7 +38,7 @@ export const someProtectedHandler = (req: Request, res: Response): void => {
 
   res.status(200).json(
     createResponse("Success", "Welcome to the protected route", {
-      user: { name, surname, password: "", email, admin },
+      user: { id, name, surname, password: "", email, admin },
     })
   );
 };
@@ -103,37 +104,12 @@ export const authMiddleware =
 
     next();
   };
-export const createUserMiddleware =
-  () =>
-  (req: Request, res: Response, next: NextFunction): void => {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      res.status(401).json({
-        status: "error",
-        message: "No token provided or invalid format",
-      });
-      return;
-    }
-
-    const token = authHeader.split(" ")[1];
-
-    try {
-      const decoded = jwt.verify(token, secret) as JwtPayload;
-      req.userData = {
-        name: decoded.userData.name,
-        surname: decoded.userData.surname,
-        password: decoded.userData.password,
-        email: decoded.userData.email,
-        admin: decoded.userData.admin ?? false,
-      };
-    } catch (error) {
-      res.status(401).json({
-        status: "error",
-        message: "Invalid or expired token",
-      });
-      return;
-    }
-
-    next();
-  };
+export const isAuthorized = (req: Request, res: Response): boolean => {
+  if (!req.userData || !req.userData.admin) {
+    res
+      .status(403)
+      .json({ status: "Forbidden", message: "User not authorized" });
+    return false;
+  }
+  return true;
+};

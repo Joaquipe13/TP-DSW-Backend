@@ -33,6 +33,3 @@ Content-Type: application/json
   "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MCwibmFtZSI6IkFkbWluIiwic3VybmFtZSI6IlVzZXIiLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImFkbWluIjp0cnVlLCJpYXQiOjE3MzY0MjQzMDcsImV4cCI6MTczNjQ1MzEwN30.6lzPRy46mnJOlpEd7gxwN-c8wiNFUX6RPIrb_NuMdps"
 }
 ###revoke token
-curl -X POST http://localhost:3000/api/login/revoke-token \
-  -H "Content-Type: application/json" \
-  -d '{"token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MCwibmFtZSI6IkFkbWluIiwic3VybmFtZSI6IlVzZXIiLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImFkbWluIjp0cnVlLCJpYXQiOjE3MzY0MjI0OTMsImV4cCI6MTczNjQ1MTI5M30.wWKd7L141tKp0cVShjjA9KnnfhnHxkiCg-rclwJztcg"}'

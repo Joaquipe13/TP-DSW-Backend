@@ -1,5 +1,6 @@
 import { JwtPayload } from "jsonwebtoken";
 interface UserData {
+  id: number;
   name: string;
   surname: string;
   password: string;
