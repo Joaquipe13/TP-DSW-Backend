@@ -69,9 +69,8 @@ function sanitizedSearchByQuery(query: any) {
 async function findAll(req: Request, res: Response) {
   try {
     const sanitizedQuery = sanitizedSearchByQuery(req.query);
-    if (sanitizedQuery?.user !== undefined && !isAuthorized(req, res)) {
-      return;
-    }
+
+    if (sanitizedQuery?.user === undefined && !isAuthorized(req, res)) return;
 
     const validatedQuery = validateSearchByQuery(sanitizedQuery);
 

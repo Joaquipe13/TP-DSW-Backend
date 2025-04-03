@@ -61,16 +61,19 @@ async function findAll(req: Request, res: Response) {
 
 async function findOne(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    const authorized = isAuthorized(req, res);
     const purchased: boolean = await checkUserCoursePurchase(req, res);
-    if (purchased) return;
+    if (!(purchased || authorized)) return;
+
     const id = Number.parseInt(req.params.id);
     const course = await em.findOneOrFail(
       Course,
       { id },
       { populate: ["topics", "levels"] }
     );
+    console.log(`\x1b[31m  3 \x1b[0m`);
     res.status(200).json(createResponse("Success", "Found course", course));
+    console.log(`\x1b[31m  4 \x1b[0m`);
   } catch (error: any) {
     res.status(500).json(createResponse("Error", error.message));
   }

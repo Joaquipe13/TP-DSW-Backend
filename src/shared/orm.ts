@@ -2,6 +2,7 @@ import { MikroORM } from "@mikro-orm/mysql";
 import { SqlHighlighter } from "@mikro-orm/sql-highlighter";
 import dotenv from "dotenv";
 import { MikroORM as MikroORMTesting } from "@mikro-orm/sqlite";
+import { AdminSeeder } from "../database/seeds/adminUserSeeder.js";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` }); // Usar un archivo de entorno específico para pruebas.
 
@@ -49,4 +50,7 @@ export const syncSchema = async () => {
   } else {
     await generator.updateSchema();
   }
+  // ejecutar el seeder
+  const seeder = orm.getSeeder();
+  await seeder.seed(AdminSeeder);
 };

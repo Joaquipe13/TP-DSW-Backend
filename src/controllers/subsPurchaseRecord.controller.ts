@@ -65,9 +65,8 @@ function sanitizedSearchByQuery(query: any) {
 async function findAll(req: Request, res: Response) {
   try {
     const sanitizedQuery = sanitizedSearchByQuery(req.query);
-    if (sanitizedQuery?.user !== undefined && !isAuthorized(req, res)) {
-      return;
-    }
+    if (sanitizedQuery?.user === undefined && !isAuthorized(req, res)) return;
+    console.error(`\x1b[31m  paso \x1b[0m`, sanitizedQuery);
     const validatedQuery = validateSearchByQuery(sanitizedQuery);
 
     const subsPurchaseRecords = await em.find(

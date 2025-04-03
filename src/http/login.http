@@ -23,7 +23,11 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9hcXXDr
 Content-Type: application/json
 Credentials: include
 
-
+### validateUser
+GET http://localhost:3000/api/login/auth
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MCwibmFtZSI6IkFkbWluIiwic3VybmFtZSI6IlVzZXIiLCJwYXNzd29yZCI6IiIsImVtYWlsIjoiYWRtaW5AZ21haWwuY29tIiwiYWRtaW4iOnRydWUsImlhdCI6MTc0MzYxNDcyNywiZXhwIjoxNzQzNjQzNTI3fQ.QuSLkws2YmxNSRmCCC5IDJyfHKzYg44JupWOzPS6TQQ
+Content-Type: application/json
+Credentials: include
 ###revoke token
 
 POST http://localhost:3000/api/login/revoke-token

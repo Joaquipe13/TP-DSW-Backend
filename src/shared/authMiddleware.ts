@@ -1,4 +1,3 @@
-import { create } from "domain";
 import dotenv from "dotenv";
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
@@ -31,8 +30,6 @@ export const validateRole = (req: Request, res: Response) => {
     .json(createResponse("Success", "Role validated successfully", role));
 };
 export const someProtectedHandler = (req: Request, res: Response): void => {
-  console.log("Usuario en req.user:", req.userData);
-
   if (!req.userData) {
     res.status(403).json(createResponse("Bad Request", "User not authorized"));
   }
@@ -44,10 +41,11 @@ export const someProtectedHandler = (req: Request, res: Response): void => {
     email: string;
     admin: boolean;
   };
+  const user = { id, name, surname, password: "", email, admin };
 
   res.status(200).json(
     createResponse("Success", "Welcome to the protected route", {
-      user: { id, name, surname, password: "", email, admin },
+      user,
     })
   );
 };
@@ -67,7 +65,6 @@ export const authMiddleware =
   (strict: boolean = true) =>
   (req: Request, res: Response, next: NextFunction): void => {
     const authHeader = req.headers.authorization;
-    console.log("authHeader:", authHeader);
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       if (strict) {
         res
@@ -83,7 +80,6 @@ export const authMiddleware =
     }
 
     const token = authHeader.split(" ")[1];
-    console.log("token:", token);
     if (revokedTokens.has(token)) {
       res
         .status(401)
@@ -95,10 +91,8 @@ export const authMiddleware =
     try {
       const decoded = jwt.verify(token, secret) as JwtPayload;
 
-      console.log("decoded.userData:", decoded.userData);
       req.userData = decoded;
 
-      console.log("Usuario en req.user middle:", req.user);
       return next();
     } catch (error) {
       if (strict) {
@@ -115,10 +109,12 @@ export const authMiddleware =
   };
 export const isAuthorized = (req: Request, res: Response): boolean => {
   if (!req.userData || !req.userData.admin) {
+    console.log(`\x1b[31m not authorized userData: ${req.userData} \x1b[0m`);
     res
       .status(403)
       .json({ status: "Forbidden", message: "User not authorized" });
     return false;
   }
+  console.log(`\x1b[31m ando \x1b[0m`);
   return true;
 };

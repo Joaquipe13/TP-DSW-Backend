@@ -10,7 +10,7 @@ import { authMiddleware } from "../shared/index.js";
 
 export const topicRouter: Router = Router();
 
-topicRouter.get("/", authMiddleware(true), findAll);
+topicRouter.get("/", authMiddleware(false), findAll);
 topicRouter.get("/:id", authMiddleware(true), findOne);
 topicRouter.post("/", authMiddleware(true), SanitizedInput, add);
 topicRouter.delete("/:id", authMiddleware(true), remove);
