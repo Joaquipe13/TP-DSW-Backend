@@ -1,7 +1,7 @@
 import { getOrm, syncSchema } from "../src/shared/orm.js";
 import { beforeAll, afterAll } from "vitest";
 import { EntityManager, MikroORM } from "@mikro-orm/mysql";
-import { persistEntities } from "./utils.js";
+import  persistEntities  from "./persistEntities.ts";
 
 let orm: MikroORM;
 

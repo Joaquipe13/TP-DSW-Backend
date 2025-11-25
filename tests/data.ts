@@ -1,6 +1,37 @@
-import { Course, Topic } from "../src/entities/index.js";
+import { Course, Topic, CoursePurchaseRecord, User } from "../src/entities/index.js";
+import dotenv from "dotenv";
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+const { EMAIL_USER, EMAIL_PASS, ADMIN_NAME, ADMIN_SURNAME } = process.env;
 
 export const dateNow = new Date();
+
+export const users: User[] = [
+  Object.assign(new User(), {
+    id: 1,
+    name: ADMIN_NAME as string,
+    surname: ADMIN_SURNAME as string,
+    password: EMAIL_PASS as string,
+    email: EMAIL_USER as string,
+    admin: true,
+  }),
+  Object.assign(new User(), {
+    id: 2,
+    name: "Regular",
+    surname: "User",
+    password: "password",
+    email: "regular@example.com",
+    admin: false,
+  }),
+  Object.assign(new User(), {
+    id: 3,
+    name: "Regular2",
+    surname: "User2",
+    password: "password",
+    email: "regular2@example.com",
+    admin: false,
+  }),
+];
+
 export const topics: Topic[] = [
   Object.assign(new Topic(), {
     id: 1,
@@ -15,6 +46,7 @@ export const topics: Topic[] = [
     description: "Introducción a React",
   }),
 ];
+ 
 
 export const courses: Course[] = [
   Object.assign(new Course(), {
@@ -27,6 +59,7 @@ export const courses: Course[] = [
     topics: [1],
     levels: [],
   }),
+
   Object.assign(new Course(), {
     id: 2,
     isActive: true,
@@ -39,6 +72,15 @@ export const courses: Course[] = [
   }),
 ];
 
+export const coursePurchaseRecords: CoursePurchaseRecord[] = [
+  Object.assign(new CoursePurchaseRecord(), {
+    id: 1,
+    user: 2,
+    course: 2,
+    purchaseDate: dateNow,
+  })
+];  
+
 export const courseToCreate = {
   title: "Curso de React",
   resume: "Curso básico de React",
@@ -46,14 +88,15 @@ export const courseToCreate = {
   topics: [2],
 };
 
-export const courseToPut = { ...courses[0], isActive: false };
+export const courseToPut = { ...courses[0], title: "Other title" };
 
 export const courseInput = {
   title: "any title",
-  price: 100,
+  price: 10,
   topics: [1, 2, 3],
   resume: "Resume example",
 };
+
 export const courseToPatchInput = {
   price: 100,
   topics: [1, 2, 3],
@@ -71,5 +114,5 @@ export const invalidCourseToPatchInput = {
   price: -10,
   topics: ["string"],
   resume: 15,
-  isActive: "true",
+  isActive: true,
 };

@@ -1,16 +1,16 @@
-import { EntityManager } from "@mikro-orm/mysql";
-import { Course, Topic } from "../src/entities/index.js";
-import { topics, courses, dateNow } from "./data";
+import { dateNow, topics, users, courses} from "./data.js";
 import { expect } from "vitest";
+import { generateSessionToken } from "../src/utils/index.ts";
 
-export async function persistEntities(em: EntityManager): Promise<void> {
-  for (const topic of topics) {
-    em.create(Topic, topic);
+
+function sanitizedCourse(course: any) {
+   if (course.levels.length === 0) {
+    delete course.levels;
   }
-  for (const course of courses) {
-    em.create(Course, course);
-  }
-  await em.flush();
+  if (course.coursePurchaseRecords.length === 0) {
+    delete course.coursePurchaseRecords;
+  } 
+  return course;
 }
 
 export function expectedCourseData(courses: any[]) {
@@ -37,27 +37,69 @@ export function expectedCourseCreatedData(course: any) {
     topics: course.topics,
   };
 }
-export function expectedPATCHCourseData(courseId: number) {
-  const course = courses[courseId - 1];
-
-  return {
-    ...course,
-    id: course.id,
-    createdAt: dateNow.getTime(),
-    isActive: true,
-    levels: undefined,
-    topics: undefined,
-    coursePurchaseRecords: undefined,
+export function expectedPATCHCourseData(courseId: number, changes: any) {
+  const existingCourse = courses[courseId - 1];
+  const result: any = {
+    ...existingCourse,
+    ...changes,
+    createdAt: dateNow.getTime()
   };
+  return sanitizedCourse(result);
 }
-export function expectedPUTCourseData(courseId: number) {
-  const course = courses[courseId - 1]; // Obtenemos el curso por ID
+export function expectedPUTCourseData(course: any) {
 
-  return {
+  const result: any = {
     ...course,
     id: course.id,
     createdAt: dateNow.getTime(),
     levels: undefined,
     coursePurchaseRecords: undefined,
   };
+  if (!result.levels) {
+    delete result.levels;
+  }
+  if (!result.coursePurchaseRecords) {
+    delete result.coursePurchaseRecords;
+  }
+  return result;
+}
+
+export function adminToken() {
+  const JwtPayload = {
+    id: 1,
+    name: users[0].name,
+    surname: users[0].surname,
+    email: users[0].email,
+    admin: users[0].admin,
+  };
+  return generateSessionToken(
+    JwtPayload,
+    "1h"
+  );
+}
+export function authorizedUserToken() {
+  const JwtPayload = {
+    id: 2,
+    name: users[1].name,
+    surname: users[1].surname,
+    email: users[1].email,
+    admin: false,
+  };
+  return generateSessionToken(
+    JwtPayload,
+    "1h"
+  );
+}
+export function unauthorizedUserToken() {
+  const JwtPayload = {
+    id: 3,
+    name: users[2].name,
+    surname: users[2].surname,
+    email: users[2].email,
+    admin: false,
+  };
+  return generateSessionToken(
+    JwtPayload,
+    "1h"
+  );
 }
