@@ -24,3 +24,4 @@ export {
   validateSubscription,
   validateSubscriptionToPatch,
 } from "./subscription.schema.js";
+export { validateId } from "./id.shema.js";

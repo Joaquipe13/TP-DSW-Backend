@@ -1,10 +1,10 @@
 import { MikroORM } from "@mikro-orm/mysql";
 import { SqlHighlighter } from "@mikro-orm/sql-highlighter";
-import dotenv from "dotenv";
 import { MikroORM as MikroORMTesting } from "@mikro-orm/sqlite";
 import { AdminSeeder } from "../database/seeds/adminUserSeeder.js";
+import dotenv from "dotenv";
 
-dotenv.config({ path: `.env.${process.env.NODE_ENV}` }); // Usar un archivo de entorno específico para pruebas.
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const { DB_HOST, DB_NAME, NODE_ENV } = process.env;
 
@@ -12,7 +12,7 @@ let ormInstance;
 
 export const getOrm = async () => {
   if (!ormInstance) {
-    console.log(DB_HOST, DB_NAME, NODE_ENV);
+    //console.log(DB_HOST, DB_NAME, NODE_ENV);
     ormInstance = await (NODE_ENV == "test"
       ? MikroORMTesting.init({
           entities: ["dist/**/*.entity.js"],
@@ -49,8 +49,7 @@ export const syncSchema = async () => {
     await generator.createSchema();
   } else {
     await generator.updateSchema();
-  }
-  // ejecutar el seeder
-  const seeder = orm.getSeeder();
+    const seeder = orm.getSeeder();
   await seeder.seed(AdminSeeder);
+  }
 };

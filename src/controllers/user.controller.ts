@@ -1,14 +1,20 @@
 import { Request, Response, NextFunction } from "express";
 import { User } from "../entities/index.js";
 import { getOrm, isAuthorized } from "../shared/index.js";
-import { validateUser, validateUserToPatch } from "../schemas/index.js";
+import { 
+  validateUser,
+  validateUserToPatch,
+  validateId 
+} from "../schemas/index.js";
 import { ZodError } from "zod";
 import { encryptPassword } from "../shared/encryption.js";
 import { createResponse } from "../utils/createResponse.js";
 
 const orm = await getOrm();
 const em = orm.em;
+
 em.getRepository(User);
+
 function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     name: req.body.name,
@@ -30,21 +36,33 @@ async function findAll(req: Request, res: Response) {
     if (!isAuthorized(req, res)) return;
     const users = await em.find(User, {}, { populate: ["purchaseRecords"] });
     res.status(200).json(createResponse("Success", "found all users", users));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError) {
+      res
+        .status(400)
+        .json(createResponse("Bad Request",  error.issues.map((issue) => issue.message).join(", ")));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function findOne(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const user = await em.findOneOrFail(
       User,
       { id },
       { populate: ["purchaseRecords"] }
     );
     res.status(200).json(createResponse("Success", "found user", user));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError) {
+      res
+        .status(400)
+        .json(createResponse("Bad Request",  error.issues.map((issue) => issue.message).join(", ")));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
@@ -76,10 +94,16 @@ async function add(req: Request, res: Response) {
       .status(201)
       .json(createResponse("Success", "User created", userCreated));
   } catch (error: any) {
-    if (error instanceof ZodError) {
+    if (error instanceof ZodError || error.name === "ZodError") {
       res
         .status(400)
-        .json(createResponse("Bad Request", "Validation error", error.issues));
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
     }
     res.status(500).json(createResponse("Error", error.message));
   }
@@ -87,7 +111,7 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const user = await em.findOneOrFail(User, id);
     const userToUpdate =
       req.method === "PATCH"
@@ -96,17 +120,39 @@ async function update(req: Request, res: Response) {
     em.assign(user, userToUpdate);
     await em.flush();
     res.status(200).json(createResponse("Success", "User updated"));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function remove(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const user = em.getReference(User, id);
     await em.removeAndFlush(user);
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }

@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { Level } from "../entities/index.js";
 import { getOrm, isAuthorized } from "../shared/index.js";
-import { validateLevel, validateLevelToPatch } from "../schemas/index.js";
+import { validateId,
+  validateLevel, 
+  validateLevelToPatch
+} from "../schemas/index.js";
 import { ZodError } from "zod";
 import { createResponse } from "../utils/createResponse.js";
 
@@ -45,14 +48,20 @@ async function findAll(req: Request, res: Response) {
       populate: ["units"],
     });
     res.json(createResponse("Success", "found all levels", levels));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError) {
+      res
+        .status(400)
+        .json(createResponse("Bad Request",  error.issues.map((issue) => issue.message).join(", ")));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function findOne(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const level = await em.findOneOrFail(
       Level,
       { id },
@@ -62,7 +71,18 @@ async function findOne(req: Request, res: Response) {
       level.units.getItems().sort((a, b) => a.order - b.order);
     }
     res.status(200).json(createResponse("Success", "found level", level));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
@@ -79,10 +99,16 @@ async function add(req: Request, res: Response) {
       .status(201)
       .json(createResponse("Success", "Level created", createdLevel));
   } catch (error: any) {
-    if (error instanceof ZodError) {
+    if (error instanceof ZodError || error.name === "ZodError") {
       res
         .status(400)
-        .json(createResponse("Bad Request", "Validation error", error.issues));
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
     }
     res.status(500).json(createResponse("Error", error.message));
   }
@@ -91,7 +117,7 @@ async function add(req: Request, res: Response) {
 async function update(req: Request, res: Response) {
   try {
     if (!isAuthorized(req, res)) return;
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const level = em.getReference(Level, id);
     let levelUpdated;
 
@@ -124,10 +150,16 @@ async function update(req: Request, res: Response) {
     await em.flush();
     res.status(200).json(createResponse("Success", "Level updated", level));
   } catch (error: any) {
-    if (error instanceof ZodError) {
+    if (error instanceof ZodError || error.name === "ZodError") {
       res
         .status(400)
-        .json(createResponse("Bad Request", "Validation error", error.issues));
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
     }
     res.status(500).json(createResponse("Error", error.message));
   }
@@ -140,7 +172,7 @@ async function remove(req: Request, res: Response) {
         await em.rollback();
         return;
       }
-      const id = Number.parseInt(req.params.id);
+      const id = validateId(req.params);
       const level = await em.findOneOrFail(Level, { id });
       const course = level.course;
       const order = level.order;
@@ -157,6 +189,17 @@ async function remove(req: Request, res: Response) {
       await em.flush();
       res.status(204).send();
     } catch (error: any) {
+      if (error instanceof ZodError || error.name === "ZodError") {
+        res
+          .status(400)
+          .json(createResponse(
+              "Bad Request",
+              error.issues
+                ? error.issues.map((issue: any) => issue.message).join(", ")
+                : "Validation error"
+            ));
+        return;
+      }
       res.status(500).json(createResponse("Error", error.message));
     }
   });

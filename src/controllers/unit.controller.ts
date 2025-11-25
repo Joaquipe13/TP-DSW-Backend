@@ -1,9 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import { Unit } from "../entities/index.js";
 import { getOrm, isAuthorized } from "../shared/index.js";
-import { validateUnit, validateUnitToPatch } from "../schemas/index.js";
+import { 
+  validateUnit, 
+  validateUnitToPatch,
+  validateId 
+} from "../schemas/index.js";
 import { ZodError } from "zod";
-import { EntityManager } from "@mikro-orm/core";
 import { createResponse } from "../utils/createResponse.js";
 
 const orm = await getOrm();
@@ -44,17 +47,39 @@ async function findAll(req: Request, res: Response) {
     const sanitizedQuery = sanitizeSearchInput(req);
     const units = await em.find(Unit, sanitizedQuery);
     res.status(200).json(createResponse("Success", "found all units", units));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function findOne(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const unit = await em.findOneOrFail(Unit, { id }, { populate: ["level"] });
     res.status(200).json(createResponse("Success", "found unit", unit));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
@@ -71,10 +96,16 @@ async function add(req: Request, res: Response) {
       .status(201)
       .json(createResponse("Success", "unit created", createdUnit));
   } catch (error: any) {
-    if (error instanceof ZodError) {
+    if (error instanceof ZodError || error.name === "ZodError") {
       res
         .status(400)
-        .json(createResponse("Bad Request", "Validation error", error.issues));
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
     }
     res.status(500).json(createResponse("Error", error.message));
   }
@@ -82,7 +113,7 @@ async function add(req: Request, res: Response) {
 async function update(req: Request, res: Response) {
   try {
     if (!isAuthorized(req, res)) return;
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
 
     if (isNaN(id)) {
       res.status(400).json(createResponse("Bad Request", "Invalid ID"));
@@ -133,7 +164,17 @@ async function update(req: Request, res: Response) {
       .status(200)
       .json(createResponse("Success", "Unit updated", unitUpdated));
   } catch (error: any) {
-    console.error(error);
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
@@ -145,7 +186,7 @@ async function remove(req: Request, res: Response) {
         await em.rollback();
         return;
       }
-      const id = Number.parseInt(req.params.id);
+      const id = validateId(req.params);
       const unit = await em.findOneOrFail(Unit, { id });
       const level = unit.level;
       const order = unit.order;
@@ -164,7 +205,18 @@ async function remove(req: Request, res: Response) {
         .status(204)
         .json(createResponse("Success", "Unit deleted successfully."));
     } catch (error: any) {
-      res.status(500).json(createResponse("Error", error.message));
+      if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
     }
   });
 }

@@ -3,7 +3,10 @@ type Status =
   | "Bad Request"
   | "Error"
   | "Redirect"
-  | "Informational";
+  | "Informational"
+  | "Unauthorized"
+  | "Forbidden"
+  | "Not Found";
 
 type MessageType =
   | string

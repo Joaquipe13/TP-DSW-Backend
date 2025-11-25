@@ -3,6 +3,7 @@ import { Subscription, SubsPurchaseRecord } from "../entities/index.js";
 import {
   validateSubscription,
   validateSubscriptionToPatch,
+  validateId
 } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { createResponse } from "../utils/createResponse.js";
@@ -34,14 +35,25 @@ async function findAll(req: Request, res: Response) {
       .json(
         createResponse("Success", "found all subscriptions", subscriptions)
       );
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function findOne(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const subscription = await em.findOneOrFail(
       Subscription,
       { id },
@@ -50,7 +62,18 @@ async function findOne(req: Request, res: Response) {
     res
       .status(200)
       .json(createResponse("Success", "found subscription", subscription));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
@@ -70,8 +93,16 @@ async function add(req: Request, res: Response) {
         createResponse("Success", "Subscription created", subscriptionCreated)
       );
   } catch (error: any) {
-    if (error instanceof ZodError) {
-      res.status(400).json(error.issues);
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
     }
     res.status(500).json(createResponse("Error", error.message));
   }
@@ -80,7 +111,7 @@ async function add(req: Request, res: Response) {
 async function update(req: Request, res: Response) {
   try {
     if (!isAuthorized(req, res)) return;
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const subscription = em.getReference(Subscription, id);
     const subscriptionUpdated =
       req.method === "PATCH"
@@ -91,7 +122,18 @@ async function update(req: Request, res: Response) {
     res
       .status(200)
       .json(createResponse("Success", "Subscription updated", subscription));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
@@ -99,7 +141,7 @@ async function update(req: Request, res: Response) {
 async function remove(req: Request, res: Response) {
   try {
     if (!isAuthorized(req, res)) return;
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const subscription = em.getReference(Subscription, id);
     const purchaseRecordCount = await em.count(SubsPurchaseRecord, {
       subscription,
@@ -114,7 +156,18 @@ async function remove(req: Request, res: Response) {
       await em.removeAndFlush(subscription);
       res.status(204).json(createResponse("Success", "Subscription deleted"));
     }
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }

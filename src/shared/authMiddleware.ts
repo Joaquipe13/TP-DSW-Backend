@@ -55,12 +55,13 @@ export const revokeToken = (req: Request, res: Response) => {
   const token = req.body.token;
 
   if (!token) {
-    res.status(400).json(createResponse("Bad Request", "Token is required"));
+    res.status(400).json(createResponse("Unauthorized", "Token is required"));
   }
 
   revokedTokens.add(token);
   res.status(200).json(createResponse("Success", "Token revoked successfully"));
 };
+
 export const authMiddleware =
   (strict: boolean = true) =>
   (req: Request, res: Response, next: NextFunction): void => {
@@ -70,7 +71,7 @@ export const authMiddleware =
         res
           .status(401)
           .json(
-            createResponse("Bad Request", "No token provided or invalid format")
+            createResponse("Unauthorized", "Authentication token is missing or invalid format")
           );
 
         return;
@@ -83,8 +84,7 @@ export const authMiddleware =
     if (revokedTokens.has(token)) {
       res
         .status(401)
-        .json(createResponse("Bad Request", "Token has been revoked"));
-
+        .json(createResponse("Unauthorized", "Token has been revoked"));
       return;
     }
 
@@ -98,7 +98,7 @@ export const authMiddleware =
       if (strict) {
         res
           .status(401)
-          .json(createResponse("Error", "Invalid or expired token"));
+          .json(createResponse("Unauthorized", "Invalid or expired token"));
         return;
       } else {
         console.warn("Invalid token in optionalAuthMiddleware");
@@ -106,15 +106,5 @@ export const authMiddleware =
     }
 
     next();
-  };
-export const isAuthorized = (req: Request, res: Response): boolean => {
-  if (!req.userData || !req.userData.admin) {
-    console.log(`\x1b[31m not authorized userData: ${req.userData} \x1b[0m`);
-    res
-      .status(403)
-      .json({ status: "Forbidden", message: "User not authorized" });
-    return false;
-  }
-  console.log(`\x1b[31m ando \x1b[0m`);
-  return true;
 };
+

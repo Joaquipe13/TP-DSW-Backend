@@ -4,11 +4,11 @@ import {
   validateCourse,
   validateCourseToPatch,
   validateSearchByTitle,
+  validateId
 } from "./../schemas/index.js";
 import { ZodError } from "zod";
 import { CoursePurchaseRecord, Course, Topic } from "../entities/index.js";
 import { createResponse } from "../utils/createResponse.js";
-import { isAuthorized } from "../shared/index.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -54,35 +54,54 @@ async function findAll(req: Request, res: Response) {
     res
       .status(200)
       .json(createResponse("Success", "Found all courses", courses));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError) {
+      res
+        .status(400)
+        .json(createResponse("Bad Request",  error.issues.map((issue) => issue.message).join(", ")));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function findOne(req: Request, res: Response) {
   try {
-    const authorized = isAuthorized(req, res);
     const purchased: boolean = await checkUserCoursePurchase(req, res);
-    if (!(purchased || authorized)) return;
+    if (!purchased){
+      return
+    };
 
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
+
     const course = await em.findOneOrFail(
       Course,
       { id },
       { populate: ["topics", "levels"] }
     );
-    console.log(`\x1b[31m  3 \x1b[0m`);
     res.status(200).json(createResponse("Success", "Found course", course));
-    console.log(`\x1b[31m  4 \x1b[0m`);
   } catch (error: any) {
+    if (error instanceof ZodError) {
+      res
+        .status(400)
+        .json(createResponse("Bad Request",  error.issues.map((issue) => issue.message).join(", ")));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function add(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
-    const validCourse = validateCourse(req.body.sanitizedInput);
+    if (req.userData?.admin === false){ 
+         res
+          .status(403)
+          .json({ status: "Forbidden", message: "User not authorized" });
+        return
+    }
+
+    const validCourse = validateCourse(req.body);
+
     const course = em.create(Course, {
       ...validCourse,
       createdAt: new Date(),
@@ -94,10 +113,15 @@ async function add(req: Request, res: Response) {
       .status(201)
       .json(createResponse("Success", "Course created", courseCreated));
   } catch (error: any) {
-    if (error instanceof ZodError) {
+    if (error instanceof ZodError || error.name === "ZodError") {
       res
         .status(400)
-        .json(createResponse("Bad Request", "Validation error", error.issues));
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
       return;
     }
     res.status(500).json(createResponse("Error", error.message));
@@ -106,7 +130,12 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    if (req.userData?.admin === false){ 
+         res
+          .status(403)
+          .json({ status: "Forbidden", message: "User not authorized" });
+        return
+    }
     const id = Number.parseInt(req.params.id);
     const course = await em.findOneOrFail(Course, id);
 
@@ -135,28 +164,57 @@ async function update(req: Request, res: Response) {
     await em.flush();
 
     res.status(200).json(createResponse("Success", "Course updated", course));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function remove(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    if (req.userData?.admin === false){ 
+         res
+          .status(403)
+          .json({ status: "Forbidden", message: "User not authorized" });
+        return
+    }
     const id = Number.parseInt(req.params.id);
-    const course = em.getReference(Course, id);
+    const course = await em.findOne(Course, { id });
+
+    if (!course) { 
+      res
+        .status(404)
+        .json(createResponse("Not Found", "Course does not exist"));
+      return;
+    }
     const purchaseRecordCount = await em.count(CoursePurchaseRecord, {
       course,
     });
     if (purchaseRecordCount > 0) {
       course.isActive = false;
       await em.flush();
-      res.status(204).json(createResponse("Success", "Course deactivated"));
+      res.status(200).json(createResponse("Success", "Course desactivated"));
     } else {
       await em.removeAndFlush(course);
-      res.status(204).json(createResponse("Success", "Course deleted"));
+      res.status(200).json(createResponse("Success", "Course deleted"));
     }
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError) {
+      res
+        .status(400)
+        .json(createResponse("Bad Request",  error.issues.map((issue) => issue.message).join(", ")));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
@@ -168,7 +226,6 @@ async function checkUserCoursePurchase(
   try {
     const userId = req.userData?.id;
     const courseId = req.params.id;
-
     if (!userId) {
       res
         .status(403)
@@ -181,17 +238,19 @@ async function checkUserCoursePurchase(
       course: { id: courseId },
     });
 
-    if (!purchased) {
-      res
-        .status(200)
-        .json(
-          createResponse(
-            "Success",
-            "Course has not been purchased by the user",
-            { purchased: false }
-          )
-        );
-      return false;
+    if (!purchased ) {
+      if (req.userData?.admin === false) {
+        res
+          .status(403)
+          .json(
+            createResponse(
+              "Forbidden",
+              "Course has not been purchased by the user",
+              { purchased: false }
+            )
+          );
+        return false;
+      }
     }
 
     return true;

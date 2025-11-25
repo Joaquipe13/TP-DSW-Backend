@@ -1,7 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { Topic } from "../entities/index.js";
 import { getOrm, isAuthorized } from "../shared/index.js";
-import { validatedTopic } from "../schemas/index.js";
+import { 
+  validatedTopic,
+  validateId,
+ } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { createResponse } from "../utils/createResponse.js";
 
@@ -30,10 +33,16 @@ async function add(req: Request, res: Response) {
       .status(201)
       .json(createResponse("Success", "Topic created", topicCreated));
   } catch (error: any) {
-    if (error instanceof ZodError) {
+    if (error instanceof ZodError || error.name === "ZodError") {
       res
         .status(400)
-        .json(createResponse("Bad Request", "Validation error", error.issues));
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
     }
     res.status(500).json(createResponse("Error", error.message));
   }
@@ -45,24 +54,46 @@ async function findAll(req: Request, res: Response) {
     res
       .status(200)
       .json(createResponse("Success", "Finded all topics", topics));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function findOne(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const topic = await em.findOneOrFail(Topic, { id });
     res.status(200).json(createResponse("Success", "Finded topic", topic));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function remove(req: Request, res: Response) {
   try {
     if (!isAuthorized(req, res)) return;
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const topic = await em.findOneOrFail(Topic, id, { populate: ["courses"] });
     if (topic.courses.length > 0) {
       res
@@ -79,7 +110,18 @@ async function remove(req: Request, res: Response) {
     res
       .status(204)
       .json(createResponse("Success", "Topic deleted successfully."));
-  } catch (error: any) {
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }

@@ -4,6 +4,7 @@ import { getOrm, isAuthorized } from "../shared/index.js";
 import {
   validateCheckCoursePurchase,
   validateCoursePurchaseRecord,
+  validateId,
   validateListPurchases,
   validateSearchByQuery,
 } from "../schemas/index.js";
@@ -88,6 +89,17 @@ async function findAll(req: Request, res: Response) {
       })
     );
   } catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
     return;
   }
@@ -95,7 +107,7 @@ async function findAll(req: Request, res: Response) {
 
 async function findOne(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const id = validateId(req.params);
     const coursePurchaseRecord = await em.findOneOrFail(
       CoursePurchaseRecord,
       { id },
@@ -111,8 +123,18 @@ async function findOne(req: Request, res: Response) {
         )
       );
   } catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
-    return;
   }
 }
 async function add(req: Request, res: Response) {
@@ -152,12 +174,18 @@ async function add(req: Request, res: Response) {
         )
       );
   } catch (error: any) {
-    if (error instanceof ZodError) {
+    if (error instanceof ZodError || error.name === "ZodError") {
       res
         .status(400)
-        .json(createResponse("Bad Request", "Validation error", error.issues));
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
       return;
     }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function listUserPurchasedCourses(req: Request, res: Response) {
@@ -187,7 +215,17 @@ async function listUserPurchasedCourses(req: Request, res: Response) {
         )
       );
   } catch (error: any) {
-    console.error("Error retrieving purchased courses:", error);
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
@@ -216,6 +254,17 @@ async function checkCoursePurchase(req: Request, res: Response) {
       );
   } catch (error: any) {
     console.error("Error verifying course purchase:", error);
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(400)
+        .json(createResponse(
+            "Bad Request",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
     res.status(500).json(createResponse("Error", error.message));
   }
 }
