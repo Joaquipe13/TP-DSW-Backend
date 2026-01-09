@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { CoursePurchaseRecord, Course, User } from "../entities/index.js";
-import { getOrm, isAuthorized } from "../shared/index.js";
+import { getOrm } from "../shared/index.js";
 import {
   validateCheckCoursePurchase,
   validateCoursePurchaseRecord,
@@ -71,7 +71,12 @@ async function findAll(req: Request, res: Response) {
   try {
     const sanitizedQuery = sanitizedSearchByQuery(req.query);
 
-    if (sanitizedQuery?.user === undefined && !isAuthorized(req, res)) return;
+    if (sanitizedQuery?.user === undefined && !req.userData?.admin){
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to access these records"));
+      return;
+    } 
 
     const validatedQuery = validateSearchByQuery(sanitizedQuery);
 
@@ -231,7 +236,8 @@ async function listUserPurchasedCourses(req: Request, res: Response) {
 }
 async function checkCoursePurchase(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    //TODO: Revisar autorizacion
+    //if (!isAuthorized(req, res)) return;
     const purchase = validateCheckCoursePurchase({
       user: req.params.userId,
       course: req.params.courseId,

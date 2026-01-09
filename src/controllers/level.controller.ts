@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Level } from "../entities/index.js";
-import { getOrm, isAuthorized } from "../shared/index.js";
+import { getOrm } from "../shared/index.js";
 import { validateId,
   validateLevel, 
   validateLevelToPatch
@@ -88,7 +88,12 @@ async function findOne(req: Request, res: Response) {
 }
 async function add(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    if (!req.userData?.admin){
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to create levels"));
+      return;
+    }
     const validLevel = validateLevel(req.body.sanitizedInput);
     const courseId = validLevel.course;
     const order = await em.count(Level, { course: courseId });
@@ -116,7 +121,12 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    if (!req.userData?.admin){
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to update levels"));
+      return;
+    };
     const id = validateId(req.params);
     const level = em.getReference(Level, id);
     let levelUpdated;
@@ -168,8 +178,11 @@ async function update(req: Request, res: Response) {
 async function remove(req: Request, res: Response) {
   await em.transactional(async (em) => {
     try {
-      if (!isAuthorized(req, res)) {
+      if (!req.userData?.admin){
         await em.rollback();
+        res
+          .status(403)
+          .json(createResponse("Forbidden", "You are not authorized to remove levels"));
         return;
       }
       const id = validateId(req.params);

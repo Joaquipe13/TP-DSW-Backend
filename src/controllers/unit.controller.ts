@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Unit } from "../entities/index.js";
-import { getOrm, isAuthorized } from "../shared/index.js";
+import { getOrm } from "../shared/index.js";
 import { 
   validateUnit, 
   validateUnitToPatch,
@@ -85,7 +85,12 @@ async function findOne(req: Request, res: Response) {
 }
 async function add(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    if (!req.userData?.admin) {
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to create units"));
+      return;
+    }
     const validUnit = validateUnit(req.body.sanitizedInput);
     const levelId = validUnit.level;
     const order = await em.count(Unit, { level: levelId });
@@ -112,8 +117,14 @@ async function add(req: Request, res: Response) {
 }
 async function update(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
-    const id = validateId(req.params);
+    if (!req.userData?.admin) {
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to update units"));
+      return;
+    }
+   
+      const id = validateId(req.params);
 
     if (isNaN(id)) {
       res.status(400).json(createResponse("Bad Request", "Invalid ID"));
@@ -182,8 +193,11 @@ async function update(req: Request, res: Response) {
 async function remove(req: Request, res: Response) {
   await em.transactional(async (em) => {
     try {
-      if (!isAuthorized(req, res)) {
+      if (!req.userData?.admin) {
         await em.rollback();
+        res
+          .status(403)
+          .json(createResponse("Forbidden", "You are not authorized to delete units"));
         return;
       }
       const id = validateId(req.params);

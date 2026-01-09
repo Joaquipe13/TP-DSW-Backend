@@ -8,7 +8,7 @@ import {
 } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { createResponse, sendSubscriptionReceipt } from "../utils/index.js";
-import { getOrm, isAuthorized } from "../shared/index.js";
+import { getOrm } from "../shared/index.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -65,7 +65,13 @@ function sanitizedSearchByQuery(query: any) {
 async function findAll(req: Request, res: Response) {
   try {
     const sanitizedQuery = sanitizedSearchByQuery(req.query);
-    if (sanitizedQuery?.user === undefined && !isAuthorized(req, res)) return;
+    //TODO: Revisar autorizacion
+    if (sanitizedQuery?.user === undefined && !req.userData?.admin) {
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to view all purchase records"));
+      return;
+    }
     console.error(`\x1b[31m  paso \x1b[0m`, sanitizedQuery);
     const validatedQuery = validateSearchByQuery(sanitizedQuery);
 

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { Topic } from "../entities/index.js";
-import { getOrm, isAuthorized } from "../shared/index.js";
+import { getOrm } from "../shared/index.js";
 import { 
   validatedTopic,
   validateId,
@@ -25,7 +25,12 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
 
 async function add(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    if (!req.userData?.admin) {
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to create topics"));
+      return;
+    }
     const parsedData = validatedTopic(req.body.sanitizedInput);
     const topicCreated = em.create(Topic, parsedData);
     await em.flush();
@@ -92,7 +97,12 @@ async function findOne(req: Request, res: Response) {
 }
 async function remove(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    if (!req.userData?.admin) {
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to remove topics"));
+      return;
+    }
     const id = validateId(req.params);
     const topic = await em.findOneOrFail(Topic, id, { populate: ["courses"] });
     if (topic.courses.length > 0) {

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { User } from "../entities/index.js";
-import { getOrm, isAuthorized } from "../shared/index.js";
+import { getOrm } from "../shared/index.js";
 import { 
   validateUser,
   validateUserToPatch,
@@ -33,7 +33,12 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
 
 async function findAll(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    if (!req.userData?.admin) {
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to view users"));
+      return;
+    }
     const users = await em.find(User, {}, { populate: ["purchaseRecords"] });
     res.status(200).json(createResponse("Success", "found all users", users));
   }catch (error: any) {

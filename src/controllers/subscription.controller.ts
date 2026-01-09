@@ -7,7 +7,7 @@ import {
 } from "../schemas/index.js";
 import { ZodError } from "zod";
 import { createResponse } from "../utils/createResponse.js";
-import { isAuthorized, getOrm } from "../shared/index.js";
+import {  getOrm } from "../shared/index.js";
 
 const orm = await getOrm();
 const em = orm.em;
@@ -79,7 +79,12 @@ async function findOne(req: Request, res: Response) {
 }
 async function add(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    if (!req.userData?.admin){
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to create subscriptions"));
+      return;
+    }
     const validSubscription = validateSubscription(req.body.sanitizedInput);
     const subscription = em.create(Subscription, {
       ...validSubscription,
@@ -110,7 +115,12 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    if (!req.userData?.admin){
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to update subscriptions"));
+      return;
+    }
     const id = validateId(req.params);
     const subscription = em.getReference(Subscription, id);
     const subscriptionUpdated =
@@ -140,7 +150,12 @@ async function update(req: Request, res: Response) {
 
 async function remove(req: Request, res: Response) {
   try {
-    if (!isAuthorized(req, res)) return;
+    if (!req.userData?.admin){
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to remove subscriptions"));
+      return;
+    }
     const id = validateId(req.params);
     const subscription = em.getReference(Subscription, id);
     const purchaseRecordCount = await em.count(SubsPurchaseRecord, {

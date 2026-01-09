@@ -74,7 +74,7 @@ export function adminToken() {
   };
   return generateSessionToken(
     JwtPayload,
-    "1h"
+    1
   );
 }
 export function authorizedUserToken() {
@@ -87,7 +87,7 @@ export function authorizedUserToken() {
   };
   return generateSessionToken(
     JwtPayload,
-    "1h"
+    1
   );
 }
 export function unauthorizedUserToken() {
@@ -100,6 +100,6 @@ export function unauthorizedUserToken() {
   };
   return generateSessionToken(
     JwtPayload,
-    "1h"
+    1
   );
 }
