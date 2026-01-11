@@ -1,6 +1,6 @@
 import { EntityManager } from "@mikro-orm/core";
-import {users, topics, courses, coursePurchaseRecords} from "./data.ts";
-import { Course, CoursePurchaseRecord, Topic, User } from "../src/entities/index.ts";
+import {users, topics, courses, coursePurchaseRecords} from "./data.js";
+import { Course, CoursePurchaseRecord, Topic, User } from "../src/entities/index.js";
 
 
 async function persistEntities(em: EntityManager): Promise<void> {

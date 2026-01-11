@@ -8,7 +8,7 @@ dotenv.config({ path: process.env.NODE_ENV });
 
 const { ADMIN_USER, ADMIN_PASS, ADMIN_SURNAME, ADMIN_NAME } = process.env;
 
-export class AdminSeeder extends Seeder {
+export class AdminUserSeeder extends Seeder {
   async run(em: EntityManager): Promise<void> {
     const existingAdmin = await em.findOne(User, { email: "admin@gmail.com" });
 

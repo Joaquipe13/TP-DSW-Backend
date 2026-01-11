@@ -6,7 +6,9 @@ type Status =
   | "Informational"
   | "Unauthorized"
   | "Forbidden"
-  | "Not Found";
+  | "Not Found"
+  | "Unprocessable Entity"
+  | "Conflict";
 
 type MessageType =
   | string

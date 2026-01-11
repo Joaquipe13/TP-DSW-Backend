@@ -1,6 +1,6 @@
 import { dateNow, topics, users, courses} from "./data.js";
 import { expect } from "vitest";
-import { generateSessionToken } from "../src/utils/index.ts";
+import { generateSessionToken } from "../src/utils/index.js";
 
 
 function sanitizedCourse(course: any) {

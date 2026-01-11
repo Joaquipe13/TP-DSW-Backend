@@ -3,6 +3,7 @@ import {
   SanitizedInput,
   findAll,
   findOne,
+  preview,
   add,
   update,
   remove,
@@ -10,6 +11,7 @@ import {
 import { authMiddleware } from "../shared/index.js";
 export const courseRouter: Router = Router();
 
+courseRouter.get("/preview/:id", authMiddleware(false), preview);
 courseRouter.get("/:id", authMiddleware(true), findOne);
 courseRouter.get("/", authMiddleware(false), findAll);
 courseRouter.post("/", authMiddleware(true), add);

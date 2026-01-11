@@ -10,10 +10,7 @@ import { ZodError } from "zod";
 import { encryptPassword } from "../shared/encryption.js";
 import { createResponse } from "../utils/createResponse.js";
 
-const orm = await getOrm();
-const em = orm.em;
-
-em.getRepository(User);
+const getEm = async () => (await getOrm()).em;
 
 function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
@@ -33,6 +30,7 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
 
 async function findAll(req: Request, res: Response) {
   try {
+    const em = await getEm();
     if (!req.userData?.admin) {
       res
         .status(403)
@@ -44,8 +42,8 @@ async function findAll(req: Request, res: Response) {
   }catch (error: any) {
     if (error instanceof ZodError) {
       res
-        .status(400)
-        .json(createResponse("Bad Request",  error.issues.map((issue) => issue.message).join(", ")));
+        .status(422)
+        .json(createResponse("Unprocessable Entity",  error.issues.map((issue) => issue.message).join(", ")));
       return;
     }
     res.status(500).json(createResponse("Error", error.message));
@@ -54,6 +52,7 @@ async function findAll(req: Request, res: Response) {
 
 async function findOne(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const id = validateId(req.params);
     const user = await em.findOneOrFail(
       User,
@@ -64,8 +63,8 @@ async function findOne(req: Request, res: Response) {
   }catch (error: any) {
     if (error instanceof ZodError) {
       res
-        .status(400)
-        .json(createResponse("Bad Request",  error.issues.map((issue) => issue.message).join(", ")));
+        .status(422)
+        .json(createResponse("Unprocessable Entity",  error.issues.map((issue) => issue.message).join(", ")));
       return;
     }
     res.status(500).json(createResponse("Error", error.message));
@@ -73,6 +72,7 @@ async function findOne(req: Request, res: Response) {
 }
 async function add(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const validUser = validateUser(req.body.sanitizedInput);
     if (validUser instanceof ZodError) {
       res
@@ -84,10 +84,11 @@ async function add(req: Request, res: Response) {
     const existingUser = await em.findOne(User, { email: validUser.email });
     if (existingUser) {
       res
-        .status(400)
+        .status(409)
         .json(
-          createResponse("Bad Request", "User with this email already exists")
+          createResponse("Conflict", "User with this email already exists")
         );
+      return;
     }
     const hashedPassword = await encryptPassword(validUser.password);
     validUser.password = hashedPassword;
@@ -101,9 +102,9 @@ async function add(req: Request, res: Response) {
   } catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -116,6 +117,7 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const id = validateId(req.params);
     const user = await em.findOneOrFail(User, id);
     const userToUpdate =
@@ -128,9 +130,9 @@ async function update(req: Request, res: Response) {
   }catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -143,15 +145,16 @@ async function update(req: Request, res: Response) {
 
 async function remove(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const id = validateId(req.params);
     const user = em.getReference(User, id);
     await em.removeAndFlush(user);
   }catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"

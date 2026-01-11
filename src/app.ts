@@ -31,7 +31,6 @@ app.use(cors(corsOptions));
 const startServer = async () => {
   const orm = await getOrm();
   const em = orm.em;
-
   app.use((req, res, next) => {
     RequestContext.create(em, next);
   });
@@ -60,7 +59,11 @@ const startServer = async () => {
     );
   });
 };
-
-startServer();
+try {
+  await startServer();
+} catch (error: any) {
+  console.error("Failed to start server:", error);
+  process.exit(1);
+}
 
 export default app;

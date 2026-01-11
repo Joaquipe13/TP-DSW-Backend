@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "noEmit": true,
+    "noEmit": false,
     "target": "ESNext",
     "module": "Node16",
     "moduleResolution": "node16",
@@ -15,8 +15,8 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "noImplicitAny": false,
-    "types": ["vitest/globals"],
-    "allowImportingTsExtensions": true
+    "types": ["vitest/globals"]
+    //"allowImportingTsExtensions": true
   },
   "include": ["src/**/*", "tests/**/*.ts", "tests/setup.ts"],
   "exclude": ["node_modules"]

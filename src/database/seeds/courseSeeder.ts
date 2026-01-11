@@ -184,13 +184,11 @@ export class CourseSeeder extends Seeder {
       console.log('Iniciando CourseSeeder...');
       const topicByDescription = new Map<string, Topic>();
 
-      // Crear topics
       for (const description of TOPIC_DESCRIPTIONS) {
         let topic = await em.findOne(Topic, { description });
         if (!topic) {
           topic = em.create(Topic, { description });
           em.persist(topic);
-          console.log(`Topic creado: ${description}`);
         } else {
           console.log(`Topic existente: ${description}`);
         }
@@ -199,15 +197,11 @@ export class CourseSeeder extends Seeder {
 
       await em.flush();
 
-      // Crear cursos con levels y units
       for (const courseData of COURSES_DATA) {
         const existingCourse = await em.findOne(Course, { title: courseData.title });
         if (existingCourse) {
-          console.log(`Curso ya existe: ${courseData.title}`);
           continue;
         }
-
-        console.log(`Creando curso: ${courseData.title}`);
         const course = em.create(Course, {
           title: courseData.title,
           resume: courseData.resume,
@@ -221,7 +215,6 @@ export class CourseSeeder extends Seeder {
           if (topic) course.topics.add(topic);
         });
 
-        // Crear levels y units para el curso
         for (const levelData of courseData.levels) {
           const level = em.create(Level, {
             name: levelData.name,
@@ -245,7 +238,6 @@ export class CourseSeeder extends Seeder {
 
         em.persist(course);
         await em.flush();
-        console.log(`Curso creado exitosamente: ${courseData.title}`);
       }
 
       console.log('CourseSeeder completado');

@@ -12,12 +12,12 @@ import { authMiddleware } from "../shared/authMiddleware.js";
 export const subsPurchaseRecordRouter: Router = Router();
 
 subsPurchaseRecordRouter.get(
-  "/user/:userId",
+  "/subscriptions",
   authMiddleware(true),
   listUserPurchasedSubs
 );
 subsPurchaseRecordRouter.get(
-  "/check/:userId",
+  "/check",
   authMiddleware(true),
   checkSubsPurchase
 );

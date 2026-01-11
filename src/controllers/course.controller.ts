@@ -9,9 +9,7 @@ import {
 import { ZodError } from "zod";
 import { CoursePurchaseRecord, Course, Topic } from "../entities/index.js";
 import { createResponse } from "../utils/createResponse.js";
-
-const orm = await getOrm();
-const em = orm.em;
+const getEm = async () => (await getOrm()).em;
 
 function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
@@ -47,6 +45,7 @@ function sanitizeSearchInput(req: Request) {
 
 async function findAll(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const sanitizedQuery = sanitizeSearchInput(req);
     const courses = await em.find(Course, sanitizedQuery, {
       populate: ["topics", "levels"],
@@ -67,6 +66,7 @@ async function findAll(req: Request, res: Response) {
 
 async function findOne(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const purchased: boolean = await checkUserCoursePurchase(req, res);
     if (!purchased){
       return
@@ -91,8 +91,49 @@ async function findOne(req: Request, res: Response) {
   }
 }
 
+async function preview(req: Request, res: Response) {
+  try {
+    const em = await getEm();
+    const id = validateId(req.params);
+
+    const course = await em.findOneOrFail(
+      Course,
+      { id },
+      { populate: ["topics", "levels"] }
+    );
+
+    const levelsPreview = course.levels.getItems().map((level) => ({
+      id: level.id,
+      order: level.order,
+      name: level.name,
+    }));
+      
+    const coursePreview = {
+      id: course.id,
+      title: course.title,
+      price: course.price,
+      resume: course.resume,
+      isActive: course.isActive,
+      createdAt: course.createdAt,
+      topics: course.topics,
+      levels: levelsPreview,
+    };
+
+    res.status(200).json(createResponse("Success", "Course preview", coursePreview));
+  } catch (error: any) {
+    if (error instanceof ZodError) {
+      res
+        .status(400)
+        .json(createResponse("Bad Request",  error.issues.map((issue) => issue.message).join(", ")));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
+  }
+}
+
 async function add(req: Request, res: Response) {
   try {
+    const em = await getEm();
     if (req.userData?.admin === false){ 
          res
           .status(403)
@@ -115,9 +156,9 @@ async function add(req: Request, res: Response) {
   } catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -130,6 +171,7 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
   try {
+    const em = await getEm();
     if (req.userData?.admin === false){ 
          res
           .status(403)
@@ -167,9 +209,9 @@ async function update(req: Request, res: Response) {
   }catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -182,6 +224,7 @@ async function update(req: Request, res: Response) {
 
 async function remove(req: Request, res: Response) {
   try {
+    const em = await getEm();
     if (req.userData?.admin === false){ 
          res
           .status(403)
@@ -211,8 +254,8 @@ async function remove(req: Request, res: Response) {
   }catch (error: any) {
     if (error instanceof ZodError) {
       res
-        .status(400)
-        .json(createResponse("Bad Request",  error.issues.map((issue) => issue.message).join(", ")));
+        .status(422)
+        .json(createResponse("Unprocessable Entity",  error.issues.map((issue) => issue.message).join(", ")));
       return;
     }
     res.status(500).json(createResponse("Error", error.message));
@@ -224,12 +267,13 @@ async function checkUserCoursePurchase(
   res: Response
 ): Promise<boolean> {
   try {
+    const em = await getEm();
     const userId = req.userData?.id;
     const courseId = req.params.id;
     if (!userId) {
       res
-        .status(403)
-        .json(createResponse("Bad Request", "User not authorized"));
+        .status(401)
+        .json(createResponse("Unauthorized", "User not authorized"));
       return false;
     }
 
@@ -261,4 +305,4 @@ async function checkUserCoursePurchase(
   }
 }
 
-export { findAll, findOne, add, update, remove, SanitizedInput };
+export { findAll, findOne, preview, add, update, remove, SanitizedInput };

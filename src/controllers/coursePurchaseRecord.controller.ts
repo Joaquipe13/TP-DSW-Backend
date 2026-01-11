@@ -11,11 +11,7 @@ import {
 import { ZodError } from "zod";
 import { createResponse, sendCoursePurchaseReceipt } from "../utils/index.js";
 
-const orm = await getOrm();
-const em = orm.em;
-em.getRepository(CoursePurchaseRecord);
-em.getRepository(Course);
-em.getRepository(User);
+const getEm = async () => (await getOrm()).em;
 
 function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
@@ -69,6 +65,7 @@ function sanitizedSearchByQuery(query: any) {
 
 async function findAll(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const sanitizedQuery = sanitizedSearchByQuery(req.query);
 
     if (sanitizedQuery?.user === undefined && !req.userData?.admin){
@@ -96,9 +93,9 @@ async function findAll(req: Request, res: Response) {
   } catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -112,6 +109,7 @@ async function findAll(req: Request, res: Response) {
 
 async function findOne(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const id = validateId(req.params);
     const coursePurchaseRecord = await em.findOneOrFail(
       CoursePurchaseRecord,
@@ -130,9 +128,9 @@ async function findOne(req: Request, res: Response) {
   } catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -144,6 +142,7 @@ async function findOne(req: Request, res: Response) {
 }
 async function add(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const validCoursePurchaseRecord = validateCoursePurchaseRecord(
       req.body.sanitizedInput
     );
@@ -181,9 +180,9 @@ async function add(req: Request, res: Response) {
   } catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -195,6 +194,7 @@ async function add(req: Request, res: Response) {
 }
 async function listUserPurchasedCourses(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const sanitizedQuery = sanitizedSearchByQuery(req.query);
     const validatedQuery = validateSearchByQuery(sanitizedQuery);
     const purchasedCourses = await em.find(
@@ -222,9 +222,9 @@ async function listUserPurchasedCourses(req: Request, res: Response) {
   } catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -236,10 +236,16 @@ async function listUserPurchasedCourses(req: Request, res: Response) {
 }
 async function checkCoursePurchase(req: Request, res: Response) {
   try {
-    //TODO: Revisar autorizacion
-    //if (!isAuthorized(req, res)) return;
+    const em = await getEm();
+    const userId = req.userData?.id;
+    if (!userId) {
+      res
+        .status(401)
+        .json(createResponse("Unauthorized", "User not authenticated"));
+      return;
+    }
     const purchase = validateCheckCoursePurchase({
-      user: req.params.userId,
+      user: userId,
       course: req.params.courseId,
     });
 
@@ -262,9 +268,9 @@ async function checkCoursePurchase(req: Request, res: Response) {
     console.error("Error verifying course purchase:", error);
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"

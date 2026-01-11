@@ -8,9 +8,7 @@ import {
 import { ZodError } from "zod";
 import { createResponse } from "../utils/createResponse.js";
 
-const orm = await getOrm();
-const em = orm.em;
-em.getRepository(Topic);
+const getEm = async () => (await getOrm()).em;
 
 function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
@@ -25,6 +23,7 @@ function SanitizedInput(req: Request, res: Response, next: NextFunction) {
 
 async function add(req: Request, res: Response) {
   try {
+    const em = await getEm();
     if (!req.userData?.admin) {
       res
         .status(403)
@@ -40,9 +39,9 @@ async function add(req: Request, res: Response) {
   } catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -55,6 +54,7 @@ async function add(req: Request, res: Response) {
 
 async function findAll(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const topics = await em.find(Topic, {});
     res
       .status(200)
@@ -62,9 +62,9 @@ async function findAll(req: Request, res: Response) {
   }catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -77,15 +77,16 @@ async function findAll(req: Request, res: Response) {
 
 async function findOne(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const id = validateId(req.params);
     const topic = await em.findOneOrFail(Topic, { id });
     res.status(200).json(createResponse("Success", "Finded topic", topic));
   }catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -97,6 +98,7 @@ async function findOne(req: Request, res: Response) {
 }
 async function remove(req: Request, res: Response) {
   try {
+    const em = await getEm();
     if (!req.userData?.admin) {
       res
         .status(403)
@@ -123,9 +125,9 @@ async function remove(req: Request, res: Response) {
   }catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"

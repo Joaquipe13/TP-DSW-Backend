@@ -10,12 +10,7 @@ import { ZodError } from "zod";
 import { createResponse, sendSubscriptionReceipt } from "../utils/index.js";
 import { getOrm } from "../shared/index.js";
 
-const orm = await getOrm();
-const em = orm.em;
-
-em.getRepository(SubsPurchaseRecord);
-em.getRepository(Subscription);
-em.getRepository(User);
+const getEm = async () => (await getOrm()).em;
 
 function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
@@ -64,6 +59,7 @@ function sanitizedSearchByQuery(query: any) {
 
 async function findAll(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const sanitizedQuery = sanitizedSearchByQuery(req.query);
     //TODO: Revisar autorizacion
     if (sanitizedQuery?.user === undefined && !req.userData?.admin) {
@@ -92,9 +88,9 @@ async function findAll(req: Request, res: Response) {
   }catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -107,6 +103,7 @@ async function findAll(req: Request, res: Response) {
 
 async function findOne(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const id = validateId(req.params);
     const subsPurchaseRecord = await em.findOneOrFail(
       SubsPurchaseRecord,
@@ -125,9 +122,9 @@ async function findOne(req: Request, res: Response) {
   }catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -140,6 +137,7 @@ async function findOne(req: Request, res: Response) {
 
 async function add(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const validSubsPurchaseRecord = validateSubsPurchaseRecord(
       req.body.sanitizedInput
     );
@@ -198,9 +196,9 @@ async function add(req: Request, res: Response) {
   } catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -213,7 +211,14 @@ async function add(req: Request, res: Response) {
 
 async function listUserPurchasedSubs(req: Request, res: Response) {
   try {
-    const userId = validateListPurchases({ user: req.params.userId });
+    const em = await getEm();
+    const userId = req.userData?.id;
+    if (!userId) {
+      res
+        .status(401)
+        .json(createResponse("Unauthorized", "User not authenticated"));
+      return;
+    }
     const purchasedSubs = await em.find(
       SubsPurchaseRecord,
       { user: { id: userId } },
@@ -234,9 +239,9 @@ async function listUserPurchasedSubs(req: Request, res: Response) {
   } catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"
@@ -248,7 +253,14 @@ async function listUserPurchasedSubs(req: Request, res: Response) {
 }
 async function checkSubsPurchase(req: Request, res: Response) {
   try {
-    const userId = validateListPurchases({ user: req.params.userId });
+    const em = await getEm();
+    const userId = req.userData?.id;
+    if (!userId) {
+      res
+        .status(401)
+        .json(createResponse("Unauthorized", "User not authenticated"));
+      return;
+    }
     const purchasedSubs = await em.find(
       SubsPurchaseRecord,
       { user: { id: userId } },
@@ -279,9 +291,9 @@ async function checkSubsPurchase(req: Request, res: Response) {
   } catch (error: any) {
     if (error instanceof ZodError || error.name === "ZodError") {
       res
-        .status(400)
+        .status(422)
         .json(createResponse(
-            "Bad Request",
+            "Unprocessable Entity",
             error.issues
               ? error.issues.map((issue: any) => issue.message).join(", ")
               : "Validation error"

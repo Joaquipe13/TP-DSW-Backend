@@ -55,7 +55,8 @@ export const revokeToken = (req: Request, res: Response) => {
   const token = req.body.token;
 
   if (!token) {
-    res.status(400).json(createResponse("Unauthorized", "Token is required"));
+    res.status(422).json(createResponse("Unprocessable Entity", "Token is required"));
+    return;
   }
 
   revokedTokens.add(token);

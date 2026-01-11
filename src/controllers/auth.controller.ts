@@ -6,11 +6,12 @@ import { getOrm } from "../shared/orm.js";
 import { verifyPassword } from "../shared/encryption.js";
 import { generateSessionToken, createResponse } from "../utils/index.js";
 
-const orm = await getOrm();
-const em = orm.em;
+const getEm = async () => (await getOrm()).em;
 
 const validateCredentials = async (email: string, password: string) => {
   console.log("email: ", email, "password: ", password);
+
+  const em = await getEm();
 
   const user = await em.findOne(User, { email });
   if (!user || !(await verifyPassword(user.password, password))) {
@@ -38,14 +39,14 @@ export const validateLogin = async (req: Request, res: Response) => {
   } catch (error: any | z.ZodError) {
     if (error instanceof z.ZodError) {
       res
-        .status(400)
-        .json(createResponse("Bad Request", "Validation error", error.errors));
+        .status(422)
+        .json(createResponse("Unprocessable Entity", "Validation error", error.errors));
       return;
     }
     if (error.message === "Invalid credentials") {
       res
         .status(401)
-        .json(createResponse("Bad Request", "Invalid credentials"));
+        .json(createResponse("Unauthorized", "Invalid credentials"));
       return;
     }
     res.status(500).json(createResponse("Error", "Internal server error"));
