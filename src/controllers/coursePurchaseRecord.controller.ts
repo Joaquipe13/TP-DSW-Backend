@@ -249,10 +249,12 @@ async function checkCoursePurchase(req: Request, res: Response) {
       course: req.params.courseId,
     });
 
-    const purchased = await em.findOne(CoursePurchaseRecord, {
-      user: { id: purchase.user },
-      course: { id: purchase.course },
+    // Use count for a lightweight existence check
+    const purchaseCount = await em.count(CoursePurchaseRecord, {
+      user: purchase.user,
+      course: purchase.course,
     });
+    const purchased = purchaseCount > 0;
     res
       .status(200)
       .json(
@@ -261,7 +263,7 @@ async function checkCoursePurchase(req: Request, res: Response) {
           purchased
             ? "Course has been purchased by the user"
             : "Course has not been purchased by the user",
-          { purchased: !!purchased }
+          purchased
         )
       );
   } catch (error: any) {
