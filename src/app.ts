@@ -15,6 +15,7 @@ import {
   coursePurchaseRecordRouter,
   topicRouter,
 } from "./routes/index.js";
+import { e2eRouter } from "../tests/E2E/e2e.routes.js";
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
 const { NODE_ENV, PUBLIC_URL, PORT, URL_FE, DB_HOST, DB_NAME } = process.env;
@@ -34,8 +35,8 @@ const startServer = async () => {
   app.use((req, res, next) => {
     RequestContext.create(em, next);
   });
-
-  if (NODE_ENV != "test") await syncSchema();
+  
+  await syncSchema();
 
   app.use(express.json());
 
@@ -48,6 +49,10 @@ const startServer = async () => {
   app.use("/api/courses", courseRouter);
   app.use("/api/coursePurchaseRecords", coursePurchaseRecordRouter);
   app.use("/api/topics", topicRouter);
+
+  if (NODE_ENV === "testE2E") {
+    app.use("/api/e2e", e2eRouter);
+  }
 
   app.use((_, res) => {
     res.status(404).send({ message: "Resource not found" });

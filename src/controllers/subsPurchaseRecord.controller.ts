@@ -61,7 +61,6 @@ async function findAll(req: Request, res: Response) {
   try {
     const em = await getEm();
     const sanitizedQuery = sanitizedSearchByQuery(req.query);
-    //TODO: Revisar autorizacion
     if (sanitizedQuery?.user === undefined && !req.userData?.admin) {
       res
         .status(403)

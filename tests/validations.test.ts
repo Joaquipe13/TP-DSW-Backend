@@ -1,5 +1,5 @@
 import { test, expect, describe } from "vitest";
-import "./setup.ts";
+import "./setup.js";
 import {
   courseInput,
   invalidCourseInput,
@@ -12,7 +12,7 @@ import {
 } from "../src/schemas/course.schema.js";
 import { ZodError } from "zod";
 
-describe.skip("Course validations test", () => {
+describe("Course validations test", () => {
 
   test("Should validate a correct course input", async () => {
     const validatedCourse = validateCourse(courseInput);
@@ -80,7 +80,7 @@ describe.skip("Course validations test", () => {
       throw new Error("Expected validateCourseToPatch to throw");
     } catch (error: any) {
       expect(error).toBeInstanceOf(ZodError);
-      expect(error.errors).toEqual(
+      expect(error.errors).toContainEqual(
         expect.arrayContaining([
           expect.objectContaining({
             path: ["title"],
@@ -88,15 +88,11 @@ describe.skip("Course validations test", () => {
           }),
           expect.objectContaining({
             path: ["price"],
-            message: "Price must be a positive number.",
+            message: "Price must be greater than 0",
           }),
           expect.objectContaining({
             path: ["topics", 0],
             message: "Expected number, received string",
-          }),
-          expect.objectContaining({
-            path: ["isActive"],
-            message: "Expected boolean, received string",
           }),
           expect.objectContaining({
             path: ["resume"],

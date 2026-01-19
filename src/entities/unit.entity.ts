@@ -15,7 +15,4 @@ export class Unit extends BaseEntity {
 
   @ManyToOne(() => Level, { onDelete: "CASCADE" })
   level!: Rel<Level>;
-  /* 
-  @OneToMany(() => File, (file) => file.unit)
-  files = new Collection<File>(this); */
 }

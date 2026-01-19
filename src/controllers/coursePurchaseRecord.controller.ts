@@ -249,7 +249,6 @@ async function checkCoursePurchase(req: Request, res: Response) {
       course: req.params.courseId,
     });
 
-    // Use count for a lightweight existence check
     const purchaseCount = await em.count(CoursePurchaseRecord, {
       user: purchase.user,
       course: purchase.course,

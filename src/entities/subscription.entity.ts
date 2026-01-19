@@ -4,7 +4,6 @@ import {
   OneToMany,
   Property,
   Collection,
-  DateTimeType,
 } from "@mikro-orm/core";
 import { BaseEntity } from "./baseEntity.entity.js";
 import { SubsPurchaseRecord } from "./index.js";
@@ -18,9 +17,6 @@ export class Subscription extends BaseEntity {
 
   @Property({ nullable: false })
   duration!: number;
-
-  /* @Property({ type: DateTimeType, nullable: true })
-  startDate? = new Date(); */
 
   @Property({ nullable: false })
   price!: number;

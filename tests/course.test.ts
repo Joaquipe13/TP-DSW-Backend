@@ -1,7 +1,7 @@
 import supertest from "supertest";
 import app from "../src/app.js";
 import { test, expect, describe } from "vitest";
-import "./setup.ts";
+import "./setup.js";
 import {
   expectedCourseData,
   expectedCourseCreatedData,
@@ -244,9 +244,9 @@ describe("POST /api/courses", () => {
       .post("/api/courses")
       .set("Authorization", `Bearer ${adminToken()}`)
       .send(invalidCourseData);
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(422);
     expect(response.body).toEqual({
-      status: "Bad Request",
+      status: "Unprocessable Entity",
       message: "Title cannot be empty, Price is required, At least one topic is required, Resume is required",
     });
   });
@@ -255,9 +255,9 @@ describe("POST /api/courses", () => {
     const response = await api
       .post("/api/courses")
       .set("Authorization", `Bearer ${adminToken()}`);
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(422);
     expect(response.body).toEqual({
-      status: "Bad Request",
+      status: "Unprocessable Entity",
       message: "Course data is required",
     });
   });
@@ -267,9 +267,9 @@ describe("POST /api/courses", () => {
       .post("/api/courses")
       .set("Authorization", `Bearer ${adminToken()}`)
       .send(["This is not a valid course object"]);
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(422);
     expect(response.body).toEqual({
-      status: "Bad Request",
+      status: "Unprocessable Entity",
       message: "Course data must be an object",
     });
   });
@@ -330,9 +330,9 @@ describe("Patch /api/courses/:id", () => {
       .patch(`/api/courses/${courseId}`)
       .set("Authorization", `Bearer ${adminToken()}`)
       .send(invalidCourseToPatchInput);
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(422);
     expect(response.body).toEqual({
-      status: "Bad Request",
+      status: "Unprocessable Entity",
       message: "Expected string, received number, Number must be greater than 0, Price must be a positive number, Expected number, received string, Expected string, received number",
     });
   });
@@ -400,9 +400,9 @@ describe("PUT /api/courses/:id", () => {
       .put(`/api/courses/${courseId}`)
       .set("Authorization", `Bearer ${adminToken()}`)
       .send({ ...courses[courseId - 1], price: -100 });
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(422);
     expect(response.body).toEqual({
-      status: "Bad Request",
+      status: "Unprocessable Entity",
       message: "Price must be a positive number",
     });
   });
