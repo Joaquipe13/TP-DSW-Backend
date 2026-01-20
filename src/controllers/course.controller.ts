@@ -48,11 +48,28 @@ async function findAll(req: Request, res: Response) {
     const em = await getEm();
     const sanitizedQuery = sanitizeSearchInput(req);
     const courses = await em.find(Course, sanitizedQuery, {
-      populate: ["topics", "levels"],
+      populate: ["topics"],
     });
+
+    const coursesPreview = courses.map((course) => {
+      const topicsPreview = course.topics.getItems().map((topic) => ({
+          id: topic.id,
+          description: topic.description,
+        }));
+        return {
+          id: course.id,
+          title: course.title,
+          price: course.price,
+          resume: course.resume,
+          isActive: course.isActive,
+          createdAt: course.createdAt,
+          topics: topicsPreview,
+      };
+    });
+
     res
       .status(200)
-      .json(createResponse("Success", "Found all courses", courses));
+      .json(createResponse("Success", "Found all courses", coursesPreview));
   }catch (error: any) {
     if (error instanceof ZodError) {
       res
@@ -102,11 +119,16 @@ async function preview(req: Request, res: Response) {
       { populate: ["topics", "levels"] }
     );
 
-    const levelsPreview = course.levels.getItems().map((level) => ({
+    const topicsPreview = course.topics.getItems().map((topic) => ({
+      id: topic.id,
+      description: topic.description,
+    }));
+
+    const levelsPreview = course.levels?.getItems().map((level) => ({
       id: level.id,
       order: level.order,
       name: level.name,
-    }));
+    })) || [];
       
     const coursePreview = {
       id: course.id,
@@ -115,7 +137,7 @@ async function preview(req: Request, res: Response) {
       resume: course.resume,
       isActive: course.isActive,
       createdAt: course.createdAt,
-      topics: course.topics,
+      topics: topicsPreview,
       levels: levelsPreview,
     };
 

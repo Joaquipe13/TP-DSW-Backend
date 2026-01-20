@@ -195,28 +195,54 @@ async function add(req: Request, res: Response) {
 async function listUserPurchasedCourses(req: Request, res: Response) {
   try {
     const em = await getEm();
-    const sanitizedQuery = sanitizedSearchByQuery(req.query);
-    const validatedQuery = validateSearchByQuery(sanitizedQuery);
+    const userId = req.userData?.id;
+    
+    if (!userId) {
+      res
+        .status(401)
+        .json(createResponse("Unauthorized", "User not authenticated"));
+      return;
+    }
+
     const purchasedCourses = await em.find(
       CoursePurchaseRecord,
-      validatedQuery,
-      { populate: ["course"] }
+      { user: userId },
+      { populate: ["course.topics", "course.levels"] }
     );
-    const courses = purchasedCourses
+
+    const uniqueCourses = purchasedCourses
       .map((record) => record.course)
       .filter(
         (course, index, self) =>
           index === self.findIndex((t) => t.id === course.id)
       );
+
+    const coursesPreview = uniqueCourses.map((course) => {
+      const topicsPreview = course.topics.getItems().map((topic) => ({
+        id: topic.id,
+        description: topic.description,
+      }));
+
+      return {
+        id: course.id,
+        title: course.title,
+        price: course.price,
+        resume: course.resume,
+        isActive: course.isActive,
+        createdAt: course.createdAt,
+        topics: topicsPreview,
+      };
+    });
+
     res
       .status(200)
       .json(
         createResponse(
           "Success",
-          courses.length
+          coursesPreview.length
             ? "Purchased courses found"
             : "No purchased courses were found",
-          courses
+          coursesPreview
         )
       );
   } catch (error: any) {
