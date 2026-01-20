@@ -1,10 +1,10 @@
 import { Request, Response } from "express";
+import * as z from "zod";
 import { User } from "../entities/index.js";
 import { validateLoginData } from "../schemas/index.js";
-import * as z from "zod";
-import { getOrm } from "../shared/orm.js";
 import { verifyPassword } from "../shared/encryption.js";
-import { generateSessionToken, createResponse } from "../utils/index.js";
+import { getOrm } from "../shared/orm.js";
+import { createResponse, generateSessionToken } from "../utils/index.js";
 
 const getEm = async () => (await getOrm()).em;
 

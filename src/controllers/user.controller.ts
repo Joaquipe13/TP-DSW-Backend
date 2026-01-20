@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import { User } from "../entities/index.js";
-import { getOrm } from "../shared/index.js";
-import { 
-  validateUser,
-  validateUserToPatch,
-  validateId 
-} from "../schemas/index.js";
 import { ZodError } from "zod";
+import { User } from "../entities/index.js";
+import { 
+  validateId,
+  validateUser,
+  validateUserToPatch
+} from "../schemas/index.js";
 import { encryptPassword } from "../shared/encryption.js";
+import { getOrm } from "../shared/index.js";
 import { createResponse } from "../utils/createResponse.js";
 
 const getEm = async () => (await getOrm()).em;

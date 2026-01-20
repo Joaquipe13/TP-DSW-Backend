@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { CoursePurchaseRecord, Course, User } from "../entities/index.js";
-import { getOrm } from "../shared/index.js";
+import { ZodError } from "zod";
+import { Course, CoursePurchaseRecord, User } from "../entities/index.js";
 import {
   validateCheckCoursePurchase,
   validateCoursePurchaseRecord,
@@ -8,7 +8,7 @@ import {
   validateListPurchases,
   validateSearchByQuery,
 } from "../schemas/index.js";
-import { ZodError } from "zod";
+import { getOrm } from "../shared/index.js";
 import { createResponse, sendCoursePurchaseReceipt } from "../utils/index.js";
 
 const getEm = async () => (await getOrm()).em;

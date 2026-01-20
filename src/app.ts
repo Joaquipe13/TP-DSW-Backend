@@ -1,20 +1,20 @@
 import "reflect-metadata";
-import express, { Express } from "express";
-import dotenv from "dotenv";
-import { getOrm, syncSchema } from "./shared/index.js";
-import cors from "cors";
 import { RequestContext } from "@mikro-orm/core";
+import cors from "cors";
+import dotenv from "dotenv";
+import express, { Express } from "express";
 import {
-  userRouter,
-  levelRouter,
-  subsPurchaseRecordRouter,
-  subscriptionRouter,
-  unitRouter,
-  loginRouter,
   courseRouter,
   coursePurchaseRecordRouter,
+  levelRouter,
+  loginRouter,
+  subsPurchaseRecordRouter,
+  subscriptionRouter,
   topicRouter,
+  unitRouter,
+  userRouter
 } from "./routes/index.js";
+import { getOrm, syncSchema } from "./shared/index.js";
 import { e2eRouter } from "../tests/E2E/e2e.routes.js";
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 

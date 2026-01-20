@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from "express";
-import { Topic } from "../entities/index.js";
-import { getOrm } from "../shared/index.js";
-import { 
-  validatedTopic,
-  validateId,
- } from "../schemas/index.js";
 import { ZodError } from "zod";
+import { Topic } from "../entities/index.js";
+import { 
+  validateId,
+  validatedTopic
+} from "../schemas/index.js";
+import { getOrm } from "../shared/index.js";
 import { createResponse } from "../utils/createResponse.js";
 
 const getEm = async () => (await getOrm()).em;

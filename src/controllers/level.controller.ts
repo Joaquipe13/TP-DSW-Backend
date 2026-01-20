@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from "express";
+import { ZodError } from "zod";
 import { Level } from "../entities/index.js";
-import { getOrm } from "../shared/index.js";
-import { validateId,
+import {
+  validateId,
   validateLevel, 
   validateLevelToPatch
 } from "../schemas/index.js";
-import { ZodError } from "zod";
+import { getOrm } from "../shared/index.js";
 import { createResponse } from "../utils/createResponse.js";
 
 const getEm = async () => (await getOrm()).em;

@@ -1,9 +1,9 @@
+export { coursePurchaseRecordRouter } from "./coursePurchaseRecord.routes.js";
 export { courseRouter } from "./course.routes.js";
+export { levelRouter } from "./level.routes.js";
 export { loginRouter } from "./login.routes.js";
 export { subsPurchaseRecordRouter } from "./subsPurchaseRecord.routes.js";
-export { topicRouter } from "./topic.routes.js";
-export { userRouter } from "./user.routes.js";
-export { coursePurchaseRecordRouter } from "./coursePurchaseRecord.routes.js";
-export { levelRouter } from "./level.routes.js";
 export { subscriptionRouter } from "./subscription.routes.js";
+export { topicRouter } from "./topic.routes.js";
 export { unitRouter } from "./unit.routes.js";
+export { userRouter } from "./user.routes.js";
