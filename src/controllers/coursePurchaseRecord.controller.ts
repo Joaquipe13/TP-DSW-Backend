@@ -5,7 +5,6 @@ import {
   validateCheckCoursePurchase,
   validateCoursePurchaseRecord,
   validateId,
-  validateListPurchases,
   validateSearchByQuery,
 } from "../schemas/index.js";
 import { getOrm } from "../shared/index.js";
