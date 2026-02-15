@@ -28,6 +28,21 @@ export function expectedCourseData(courses: any[]) {
   }));
 }
 
+export function expectedCourseReviewData(courses: any[]) {
+  return courses.map((course) => ({
+    id: course.id,
+    title: course.title,
+    price: course.price,
+    resume: course.resume,
+    createdAt: dateNow.getTime(),
+    isActive: course.isActive || false,
+    topics: course.topics.map((topicId) => ({
+      id: topicId,
+      description: topics[topicId - 1].description,
+    })),
+  }));
+}
+
 export function expectedCourseCreatedData(course: any) {
   return {
     ...course,

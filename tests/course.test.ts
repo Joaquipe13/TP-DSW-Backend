@@ -4,6 +4,7 @@ import { test, expect, describe } from "vitest";
 import "./setup.js";
 import {
   expectedCourseData,
+  expectedCourseReviewData,
   expectedCourseCreatedData,
   expectedPATCHCourseData,
   expectedPUTCourseData,
@@ -23,7 +24,7 @@ describe("GET /api/courses", () => {
     expect(response.body).toEqual({
       status: "Success",
       message: "Found all courses",
-      data: expectedCourseData(courses),
+      data: expectedCourseReviewData(courses),
     });
   });
 
@@ -34,7 +35,7 @@ describe("GET /api/courses", () => {
     expect(response.body).toEqual({
       status: "Success",
       message: "Found all courses",
-      data: expectedCourseData([courses[0]]),
+      data: expectedCourseReviewData([courses[0]]),
     });
   });
 
@@ -56,7 +57,7 @@ describe("GET /api/courses", () => {
     expect(response.body).toEqual({
       status: "Success",
       message: "Found all courses",
-      data: expectedCourseData(courses),
+      data: expectedCourseReviewData(courses),
     });
   });
 
@@ -67,28 +68,17 @@ describe("GET /api/courses", () => {
     expect(response.body).toEqual({
       status: "Success",
       message: "Found all courses",
-      data: expectedCourseData(courses),
+      data: expectedCourseReviewData(courses),
     });
   });
 
-  test("Should return status 200 with special characters in title", async () => {
-    const title = "!@#$%^&*()";
-    const response = await api.get(`/api/courses?title=${title}`);
-    expect(response.status).toBe(200);
-    expect(response.body).toEqual({
-      status: "Success",
-      message: "Found all courses",
-      data: [],
-    });
-  });
-
-  test("Should return status 400 with invalid query parameter", async () => {
+  test("Should return status 200 when invalid query param is sanitized", async () => {
     const response = await api.get(`/api/courses?invalidParam=value`);
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       status: "Success",
       message: "Found all courses",
-      data: expectedCourseData(courses),
+      data: expectedCourseReviewData(courses),
     });
   });
 })

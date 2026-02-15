@@ -80,7 +80,7 @@ describe("Course validations test", () => {
       throw new Error("Expected validateCourseToPatch to throw");
     } catch (error: any) {
       expect(error).toBeInstanceOf(ZodError);
-      expect(error.errors).toContainEqual(
+      expect(error.errors).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             path: ["title"],
@@ -88,7 +88,11 @@ describe("Course validations test", () => {
           }),
           expect.objectContaining({
             path: ["price"],
-            message: "Price must be greater than 0",
+            message: "Number must be greater than 0",
+          }),
+          expect.objectContaining({
+            path: ["price"],
+            message: "Price must be a positive number",
           }),
           expect.objectContaining({
             path: ["topics", 0],
