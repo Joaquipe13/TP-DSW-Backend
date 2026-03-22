@@ -22,17 +22,18 @@ export const getOrm = async () => {
               entities: ["dist/**/*.entity.js"],
               entitiesTs: ["src/**/*entity.ts"],
               dbName: DB_NAME,
+              clientUrl: DB_HOST,
               type: "sqlite",
               highlighter: new SqlHighlighter(),
               debug: false,
               driverOptions: {
-                connection: {
-                  ssl: {
-                    minVersion: 'TLSv1.2',
-                    rejectUnauthorized: true,
-                  },
+              connection: {
+                ssl: {
+                  minVersion: 'TLSv1.2',
+                  rejectUnauthorized: true,
                 },
               },
+            },
               schemaGenerator: {
                 disableForeignKeys: true,
                 createForeignKeyConstraints: false,
