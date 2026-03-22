@@ -62,6 +62,14 @@ export const getOrm = async () => {
             disableForeignKeys: true,
             createForeignKeyConstraints: true,
           },
+          driverOptions: process.env.NODE_ENV === 'production' ? {
+                connection: {
+                  ssl: {
+                    minVersion: 'TLSv1.2',
+                    rejectUnauthorized: true,
+                  },
+                },
+          } : {},
         });
     }
     ormInstance = await ormPromise;
