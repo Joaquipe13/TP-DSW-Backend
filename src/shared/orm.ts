@@ -27,12 +27,9 @@ export const getOrm = async () => {
               highlighter: new SqlHighlighter(),
               debug: false,
               driverOptions: {
-              connection: {
                 ssl: {
-                  minVersion: 'TLSv1.2',
                   rejectUnauthorized: true,
                 },
-              },
             },
               schemaGenerator: {
                 disableForeignKeys: true,
