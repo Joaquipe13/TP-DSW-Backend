@@ -39,7 +39,7 @@ export const getOrm = async () => {
               } : {},
               schemaGenerator: {
                 disableForeignKeys: true,
-                createForeignKeyConstraints: false,
+                createForeignKeyConstraints: true,
               },
           });
       }
@@ -52,7 +52,10 @@ export const getOrm = async () => {
       ormPromise = MikroORM.init({
           entities: ["dist/**/*.entity.js"],
           dbName: DB_NAME,
-          clientUrl: DB_HOST,
+          host: DB_HOST,
+          port: DB_PORT,
+          user: DB_USER,
+          password: DB_PASSWORD, 
           highlighter: new SqlHighlighter(),
           debug: true,
           schemaGenerator: {
