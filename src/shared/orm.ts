@@ -13,15 +13,11 @@ let ormTestingInstance;
 let ormPromise;
 let ormTestingPromise;
 
-let instanceCount = 0;
 
 export const getOrm = async () => {
   if(NODE_ENV == "test") {
     if (!ormTestingInstance) {
       if (!ormTestingPromise) {
-        instanceCount++;
-        console.log(`\n[ORM] Creando instancia de TEST #${instanceCount}`);
-        console.log(new Error().stack);
         ormTestingPromise = MikroORMTesting.init({
               entities: ["dist/**/*.entity.js"],
               entitiesTs: ["src/**/*entity.ts"],
@@ -29,6 +25,14 @@ export const getOrm = async () => {
               type: "sqlite",
               highlighter: new SqlHighlighter(),
               debug: false,
+              driverOptions: {
+                connection: {
+                  ssl: {
+                    minVersion: 'TLSv1.2',
+                    rejectUnauthorized: true,
+                  },
+                },
+              },
               schemaGenerator: {
                 disableForeignKeys: true,
                 createForeignKeyConstraints: false,
@@ -41,9 +45,6 @@ export const getOrm = async () => {
   }
   if (!ormInstance) {
     if (!ormPromise) {
-      instanceCount++;
-      console.log(`\n[ORM] Creando instancia de PRODUCTION #${instanceCount}`);
-      console.log(new Error().stack);
       ormPromise = MikroORM.init({
           entities: ["dist/**/*.entity.js"],
           dbName: DB_NAME,
