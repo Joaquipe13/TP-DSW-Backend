@@ -6,8 +6,8 @@ import { DatabaseSeeder } from "../database/seeds/databaseSeeder.js";
 
 dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-const { DB_HOST, DB_NAME, NODE_ENV } = process.env;
-
+const { DB_HOST, DB_NAME, DB_USER, DB_PASSWORD, NODE_ENV } = process.env;
+const DB_PORT = process.env.DB_PORT ? parseInt(process.env.DB_PORT) : 3306;
 let ormInstance;
 let ormTestingInstance;
 let ormPromise;
@@ -21,16 +21,22 @@ export const getOrm = async () => {
         ormTestingPromise = MikroORMTesting.init({
               entities: ["dist/**/*.entity.js"],
               entitiesTs: ["src/**/*entity.ts"],
+              host: DB_HOST,
+              port: DB_PORT,
+              user: DB_USER,
+              password: DB_PASSWORD, 
               dbName: DB_NAME,
-              clientUrl: DB_HOST,
               type: "sqlite",
               highlighter: new SqlHighlighter(),
               debug: false,
-              driverOptions: {
-                ssl: {
-                  rejectUnauthorized: true,
+              driverOptions: process.env.NODE_ENV === 'production' ? {
+                connection: {
+                  ssl: {
+                    minVersion: 'TLSv1.2',
+                    rejectUnauthorized: true,
+                  },
                 },
-            },
+              } : {},
               schemaGenerator: {
                 disableForeignKeys: true,
                 createForeignKeyConstraints: false,
