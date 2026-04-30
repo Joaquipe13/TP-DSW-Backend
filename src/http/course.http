@@ -10,12 +10,13 @@ Content-Type: application/json
 
 {
   "title": "titletesdt3",
-  "price": "302",
+  "resume": "resumetest3",
+  "price": 302,
   "topics": [1]
 }
 
 ### search by tittle
-GET http://localhost:3000/api/courses?title=Priva
+GET http://localhost:3000/api/courses?title=JavaScript
 
 ### ID
 @id = {{createCourse.response.body.data.id}}
@@ -31,7 +32,7 @@ Content-Type: application/json
   "id": 2,
   "tittle": "*sadsadas**",
   "price": "30",
-  "topics": [1],
+  "topics": [17],
   "isActive": true
 }
 
@@ -41,18 +42,18 @@ POST http://localhost:3000/api/courses
 Content-Type: application/json 
 
 {
-  "tittle": "***",
-  "price": "30",
-"isActive": false,
-"topics": [1]
-
+  "title": "***",
+  "price": 30,
+"topics": [17],
+"resume" : "resumetest3"
 
 }
 
 ###
 @idToDelete = {{createCourseToDelete.response.body.data.id}}
+
 ### delete course
-DELETE http://localhost:3000/api/courses/{{idToDelete}}
+DELETE http://localhost:3000/api/courses/15
 
 
 ### Edit/modify course (PATCH - Modificaciones parciales/modificaciones incrementales)

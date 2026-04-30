@@ -1,21 +1,23 @@
 import { Request, Response, NextFunction } from "express";
-import { SubsPurchaseRecord } from "../entities/subsPurchaseRecord.entity.js";
-import { orm } from "../shared/orm.js";
-import { subsPurchaseSchema } from "../schemas/subsPurchase.schema.js";
 import { ZodError } from "zod";
+import { Subscription, SubsPurchaseRecord, User } from "../entities/index.js";
+import {
+  validateId,
+  validateListPurchases,
+  validateSearchByQuery,
+  validateSubsPurchaseRecord
+} from "../schemas/index.js";
+import { getOrm } from "../shared/index.js";
+import { createResponse, sendSubscriptionReceipt } from "../utils/index.js";
 
-const em = orm.em;
+const getEm = async () => (await getOrm()).em;
 
-em.getRepository(SubsPurchaseRecord);
-function sanitizedInput(req: Request, res: Response, next: NextFunction) {
-  // Creación de objeto con propiedades válidas
+function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
-    totalAmount: req.body.totalAmount,
     subscription: req.body.subscription,
-    member: req.body.member,
+    user: req.body.user,
   };
 
-  // Eliminación de propiedades undefined
   Object.keys(req.body.sanitizedInput).forEach((key) => {
     if (req.body.sanitizedInput[key] === undefined) {
       delete req.body.sanitizedInput[key];
@@ -23,46 +25,85 @@ function sanitizedInput(req: Request, res: Response, next: NextFunction) {
   });
   next();
 }
+function sanitizedSearchByQuery(query: any) {
+  const sanitizedQuery: any = {};
 
-async function add(req: Request, res: Response) {
-  try {
-    const parsedData = subsPurchaseSchema.parse(req.body.sanitizedInput);
-    //const subsPurchaseRecord = em.create(SubsPurchaseRecord, parsedData);
-    await em.flush();
-    res.status(201).json({
-      message: "Subscription purchase record created",
-      //data: subsPurchaseRecord,
-    });
-  } catch (error: any) {
-    if (error instanceof ZodError) {
-      return res
-        .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+  if (query.startDate) {
+    const startDate = new Date(query.startDate);
+    if (!isNaN(startDate.getTime())) {
+      sanitizedQuery.startDate = startDate.toISOString();
     }
-    res.status(500).json({ message: error.message });
   }
+
+  if (query.endDate) {
+    const endDate = new Date(query.endDate);
+    if (!isNaN(endDate.getTime())) {
+      sanitizedQuery.endDate = endDate.toISOString();
+    }
+  }
+
+  if (query.subscription) {
+    const subscriptionId = Number(query.subscription);
+    if (!isNaN(subscriptionId)) {
+      sanitizedQuery.subscription = subscriptionId;
+    }
+  }
+  if (query.user) {
+    const userId = Number(query.user);
+    if (!isNaN(userId)) {
+      sanitizedQuery.user = userId;
+    }
+  }
+  return sanitizedQuery;
 }
 
 async function findAll(req: Request, res: Response) {
   try {
-    res.json({ message: "found all subsPurchaseRecords" });
+    const em = await getEm();
+    const sanitizedQuery = sanitizedSearchByQuery(req.query);
+    if (sanitizedQuery?.user === undefined && !req.userData?.admin) {
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to view all purchase records"));
+      return;
+    }
+    console.error(`\x1b[31m  paso \x1b[0m`, sanitizedQuery);
+    const validatedQuery = validateSearchByQuery(sanitizedQuery);
+
     const subsPurchaseRecords = await em.find(
       SubsPurchaseRecord,
-      {},
+      validatedQuery,
       { populate: ["subscription", "user"] }
     );
-    res.json({
-      message: "found all subsPurchaseRecords",
-      data: subsPurchaseRecords,
-    });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          "Found subsPurchaseRecords",
+          subsPurchaseRecords
+        )
+      );
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function findOne(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const em = await getEm();
+    const id = validateId(req.params);
     const subsPurchaseRecord = await em.findOneOrFail(
       SubsPurchaseRecord,
       { id },
@@ -70,40 +111,202 @@ async function findOne(req: Request, res: Response) {
     );
     res
       .status(200)
-      .json({ message: "found subsPurchaseRecord", data: subsPurchaseRecord });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+      .json(
+        createResponse(
+          "Success",
+          "Found subsPurchaseRecord",
+          subsPurchaseRecord
+        )
+      );
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
-async function update(req: Request, res: Response) {
+async function add(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
-    const subsPurchaseRecordToUpdate = await em.findOneOrFail(
-      SubsPurchaseRecord,
-      { id }
+    const em = await getEm();
+    const validSubsPurchaseRecord = validateSubsPurchaseRecord(
+      req.body.sanitizedInput
     );
-    em.assign(subsPurchaseRecordToUpdate, req.body.sanitizedInput);
-    await em.flush();
-    res.status(200).json({
-      message: "SubsPurchaseRecord updated",
-      data: subsPurchaseRecordToUpdate,
+    const purchasedSubs = await em.find(
+      SubsPurchaseRecord,
+      { user: { id: validSubsPurchaseRecord.user } },
+      { populate: ["subscription"], orderBy: { effectiveAt: "DESC" } }
+    );
+    let purchased = false;
+    let expirationDate: number = Date.now();
+    if (purchasedSubs.length > 0) {
+      const firstPurchase = purchasedSubs[0];
+      if (firstPurchase?.effectiveAt && firstPurchase?.subscription?.duration) {
+        expirationDate =
+          firstPurchase.effectiveAt.getTime() +
+          firstPurchase.subscription.duration * 24 * 60 * 60 * 1000;
+        purchased = expirationDate > Date.now();
+      }
+    }
+    let effectiveAt =
+      expirationDate > Date.now() ? new Date(expirationDate) : new Date();
+    const subscriptionId = validSubsPurchaseRecord.subscription;
+    const subscription = await em.findOneOrFail(Subscription, subscriptionId);
+    const subscriptionPurchaseRecord = em.create(SubsPurchaseRecord, {
+      ...validSubsPurchaseRecord,
+      totalAmount: subscription.price,
+      purchaseAt: new Date(),
+      effectiveAt: effectiveAt,
     });
+    await em.flush();
+    const user = await em.findOneOrFail(User, subscriptionPurchaseRecord.user);
+    const purchaseDetails = {
+      id: subscriptionPurchaseRecord.id,
+      description: subscription.description,
+      duration: subscription.duration,
+      price: subscription.price,
+      datePurchase: new Date(),
+      activateDate: effectiveAt,
+    };
+    const email = user.email;
+    const sendEmail: string = await sendSubscriptionReceipt(
+      email,
+      purchaseDetails
+    );
+    res
+      .status(201)
+      .json(
+        createResponse(
+          "Success",
+          sendEmail === "The email was sent successfully"
+            ? "Subscription purchase record created and email sent"
+            : sendEmail,
+          subscriptionPurchaseRecord
+        )
+      );
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
-async function remove(req: Request, res: Response) {
+async function listUserPurchasedSubs(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
-    const subsPurchaseRecord = em.getReference(SubsPurchaseRecord, id);
-    await em.removeAndFlush(subsPurchaseRecord);
-    res.status(204).json({ message: "SubsPurchaseRecord deleted" });
+    const em = await getEm();
+    const userId = req.userData?.id;
+    if (!userId) {
+      res
+        .status(401)
+        .json(createResponse("Unauthorized", "User not authenticated"));
+      return;
+    }
+    const purchasedSubs = await em.find(
+      SubsPurchaseRecord,
+      { user: { id: userId } },
+      { populate: ["subscription"] }
+    );
+    const subs = purchasedSubs.map((record) => record.subscription);
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          subs.length
+            ? "Purchased subscriptions found"
+            : "No purchased subscriptions were found",
+          subs
+        )
+      );
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
-  //res.status(500).json({ message: 'Not implemented' });
 }
+async function checkSubsPurchase(req: Request, res: Response) {
+  try {
+    const em = await getEm();
+    const userId = req.userData?.id;
+    if (!userId) {
+      res
+        .status(401)
+        .json(createResponse("Unauthorized", "User not authenticated"));
+      return;
+    }
+    const purchasedSubs = await em.find(
+      SubsPurchaseRecord,
+      { user: { id: userId } },
+      { populate: ["subscription"], orderBy: { effectiveAt: "DESC" } }
+    );
+    let purchased = false;
+    if (purchasedSubs.length > 0) {
+      const firstPurchase = purchasedSubs[0];
+      if (firstPurchase?.effectiveAt && firstPurchase?.subscription?.duration) {
+        purchased =
+          firstPurchase.effectiveAt.getTime() +
+            firstPurchase.subscription.duration * 24 * 60 * 60 * 1000 >
+          Date.now();
+      }
+    }
 
-export { findAll, findOne, add, update, remove, sanitizedInput };
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          purchased
+            ? "Subscription has been purchased by the user"
+            : "Subscription has not been purchased by the user",
+          !!purchased
+        )
+      );
+  } catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
+  }
+}
+export {
+  findAll,
+  findOne,
+  add,
+  SanitizedInput,
+  listUserPurchasedSubs,
+  checkSubsPurchase,
+};

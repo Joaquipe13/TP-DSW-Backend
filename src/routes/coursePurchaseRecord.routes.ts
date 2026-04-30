@@ -8,13 +8,12 @@ import {
   checkCoursePurchase,
 } from "../controllers/coursePurchaseRecord.controller.js";
 
-export const coursePurchaseRecordRouter = Router();
+import { authMiddleware } from "../shared/index.js";
 
-coursePurchaseRecordRouter.get(
-  "/user/:userId/courses",
-  listUserPurchasedCourses
-);
-coursePurchaseRecordRouter.get("/check/:userId/:courseId", checkCoursePurchase);
-coursePurchaseRecordRouter.get("/", findAll);
-coursePurchaseRecordRouter.get("/:id", findOne);
-coursePurchaseRecordRouter.post("/", SanitizedInput, add);
+export const coursePurchaseRecordRouter: Router = Router();
+
+coursePurchaseRecordRouter.get("/courses",authMiddleware(true), listUserPurchasedCourses);
+coursePurchaseRecordRouter.get("/check/:courseId",authMiddleware(false), checkCoursePurchase);
+coursePurchaseRecordRouter.get("/",authMiddleware(true), findAll);
+coursePurchaseRecordRouter.get("/:id",authMiddleware(true), findOne);
+coursePurchaseRecordRouter.post("/",authMiddleware(true), SanitizedInput, add);

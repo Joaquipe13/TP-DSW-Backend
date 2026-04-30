@@ -1,18 +1,16 @@
 import { Request, Response, NextFunction } from "express";
-import { CoursePurchaseRecord } from "../entities/coursePurchaseRecord.entity.js";
-import { Course } from "../entities/course.entity.js";
-import { orm } from "../shared/orm.js";
-import {
-  validateCheckPurchase,
-  validatelistPurchases,
-  validateCoursePurchaseRecord,
-  validateSearchByQuery,
-} from "../schemas/coursePurchase.schema.js";
 import { ZodError } from "zod";
+import { Course, CoursePurchaseRecord, User } from "../entities/index.js";
+import {
+  validateCheckCoursePurchase,
+  validateCoursePurchaseRecord,
+  validateId,
+  validateSearchByQuery,
+} from "../schemas/index.js";
+import { getOrm } from "../shared/index.js";
+import { createResponse, sendCoursePurchaseReceipt } from "../utils/index.js";
 
-const em = orm.em;
-em.getRepository(CoursePurchaseRecord);
-em.getRepository(Course);
+const getEm = async () => (await getOrm()).em;
 
 function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
@@ -55,12 +53,27 @@ function sanitizedSearchByQuery(query: any) {
       sanitizedQuery.user = userId;
     }
   }
+  if (query.title) {
+    const title = query.title;
+    if (typeof title === "string") {
+      sanitizedQuery.title = title;
+    }
+  }
   return sanitizedQuery;
 }
 
 async function findAll(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const sanitizedQuery = sanitizedSearchByQuery(req.query);
+
+    if (sanitizedQuery?.user === undefined && !req.userData?.admin){
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to access these records"));
+      return;
+    } 
+
     const validatedQuery = validateSearchByQuery(sanitizedQuery);
 
     const coursePurchaseRecords = await em.find(
@@ -71,33 +84,64 @@ async function findAll(req: Request, res: Response) {
       }
     );
 
-    res.json({
-      message: "found all coursePurchaseRecords",
-      data: { coursePurchaseRecords },
-    });
+    res.status(200).json(
+      createResponse("Success", "Found all coursePurchaseRecords", {
+        coursePurchaseRecords,
+      })
+    );
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
+    return;
   }
 }
 
 async function findOne(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const em = await getEm();
+    const id = validateId(req.params);
     const coursePurchaseRecord = await em.findOneOrFail(
       CoursePurchaseRecord,
       { id },
       { populate: ["course", "user"] }
     );
-    res.status(200).json({
-      message: "found coursePurchaseRecord",
-      data: coursePurchaseRecord,
-    });
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          "Found coursePurchaseRecord",
+          coursePurchaseRecord
+        )
+      );
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function add(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const validCoursePurchaseRecord = validateCoursePurchaseRecord(
       req.body.sanitizedInput
     );
@@ -109,66 +153,157 @@ async function add(req: Request, res: Response) {
       purchaseAt: new Date(),
     });
     await em.flush();
-    res.status(201).json({
-      message: "Course purchase record created",
-      data: coursePurchaseRecord,
-    });
+    const user = await em.findOneOrFail(User, coursePurchaseRecord.user);
+    const purchaseDetails = {
+      id: coursePurchaseRecord.id,
+      title: course.title,
+      price: course.price,
+      datePurchase: new Date(),
+    };
+    const email = user.email;
+    const sendEmail: string = await sendCoursePurchaseReceipt(
+      email,
+      purchaseDetails
+    );
+    res
+      .status(201)
+      .json(
+        createResponse(
+          "Success",
+          sendEmail === "The email was sent successfully"
+            ? "Course purchase record created and email sent"
+            : sendEmail,
+          coursePurchaseRecord
+        )
+      );
   } catch (error: any) {
-    if (error instanceof ZodError) {
-      return res
-        .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
     }
-    console.log(error.issues);
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function listUserPurchasedCourses(req: Request, res: Response) {
   try {
-    const userId = Number(req.params.userId);
-
-    if (isNaN(userId) || userId <= 0) {
-      return res.status(400).json({ message: "Invalid userId" });
+    const em = await getEm();
+    const userId = req.userData?.id;
+    
+    if (!userId) {
+      res
+        .status(401)
+        .json(createResponse("Unauthorized", "User not authenticated"));
+      return;
     }
 
-    validatelistPurchases({ user: userId });
     const purchasedCourses = await em.find(
       CoursePurchaseRecord,
-      { user: { id: userId } },
-      { populate: ["course"] }
+      { user: userId },
+      { populate: ["course.topics", "course.levels"] }
     );
-    const courses = purchasedCourses.map((record) => record.course);
-    res.status(200).json({
-      message: courses.length
-        ? "Cursos comprados encontrados"
-        : "No se encontraron cursos comprados",
-      data: courses,
+
+    const uniqueCourses = purchasedCourses
+      .map((record) => record.course)
+      .filter(
+        (course, index, self) =>
+          index === self.findIndex((t) => t.id === course.id)
+      );
+
+    const coursesPreview = uniqueCourses.map((course) => {
+      const topicsPreview = course.topics.getItems().map((topic) => ({
+        id: topic.id,
+        description: topic.description,
+      }));
+
+      return {
+        id: course.id,
+        title: course.title,
+        price: course.price,
+        resume: course.resume,
+        isActive: course.isActive,
+        createdAt: course.createdAt,
+        topics: topicsPreview,
+      };
     });
+
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          coursesPreview.length
+            ? "Purchased courses found"
+            : "No purchased courses were found",
+          coursesPreview
+        )
+      );
   } catch (error: any) {
-    console.error("Error al obtener cursos comprados:", error);
-    res.status(500).json({ message: error.message });
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function checkCoursePurchase(req: Request, res: Response) {
   try {
-    const purchase = validateCheckPurchase({
-      user: req.params.userId,
+    const em = await getEm();
+    const userId = req.userData?.id;
+    if (!userId) {
+      res
+        .status(401)
+        .json(createResponse("Unauthorized", "User not authenticated"));
+      return;
+    }
+    const purchase = validateCheckCoursePurchase({
+      user: userId,
       course: req.params.courseId,
     });
 
-    const purchased = await em.findOne(CoursePurchaseRecord, {
-      user: { id: purchase.user },
-      course: { id: purchase.course },
+    const purchaseCount = await em.count(CoursePurchaseRecord, {
+      user: purchase.user,
+      course: purchase.course,
     });
-    res.status(200).json({
-      message: purchased
-        ? "El curso ha sido comprado por el usuario"
-        : "El curso no ha sido comprado por el usuario",
-      purchased: !!purchased,
-    });
+    const purchased = purchaseCount > 0;
+    res
+      .status(200)
+      .json(
+        createResponse(
+          "Success",
+          purchased
+            ? "Course has been purchased by the user"
+            : "Course has not been purchased by the user",
+          purchased
+        )
+      );
   } catch (error: any) {
-    console.error("Error al verificar compra:", error);
-    res.status(500).json({ message: error.message });
+    console.error("Error verifying course purchase:", error);
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 export {

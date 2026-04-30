@@ -1,17 +1,18 @@
 import { Router } from "express";
 import {
-  sanitizeUserInput,
+  SanitizedInput,
   findAll,
   findOne,
-  add,
   update,
   remove,
+  add,
 } from "../controllers/user.controller.js";
 
-export const userRouter = Router();
+import { authMiddleware } from "../shared/index.js";
+export const userRouter: Router = Router();
 
-userRouter.get("/", findAll);
+userRouter.get("/", authMiddleware(true), findAll);
 userRouter.get("/:id", findOne);
-userRouter.post("/", sanitizeUserInput, add);
-userRouter.put("/:id", sanitizeUserInput, update);
-userRouter.delete("/:id", remove);
+userRouter.post("/", SanitizedInput, add);
+userRouter.put("/:id", SanitizedInput, update);
+userRouter.delete("/:id", authMiddleware(true), remove);

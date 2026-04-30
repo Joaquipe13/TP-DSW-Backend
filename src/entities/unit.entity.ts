@@ -1,15 +1,6 @@
-import {
-  Entity,
-  ManyToOne,
-  OneToMany,
-  Property,
-  Collection,
-  Rel,
-  PrimaryKey,
-} from "@mikro-orm/core";
-import { BaseEntity } from "../shared/baseEntity.entity.js";
+import { Entity, ManyToOne, Property, Rel } from "@mikro-orm/core";
+import { BaseEntity } from "./baseEntity.entity.js";
 import { Level } from "./level.entity.js";
-import { File } from "./file.entity.js";
 
 @Entity()
 export class Unit extends BaseEntity {
@@ -24,7 +15,4 @@ export class Unit extends BaseEntity {
 
   @ManyToOne(() => Level, { onDelete: "CASCADE" })
   level!: Rel<Level>;
-
-  @OneToMany(() => File, (file) => file.unit)
-  files = new Collection<File>(this);
 }

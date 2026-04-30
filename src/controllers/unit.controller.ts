@@ -1,14 +1,17 @@
 import { Request, Response, NextFunction } from "express";
-import { Unit } from "../entities/unit.entity.js";
-import { orm } from "../shared/orm.js";
-import { validateUnit, validateUnitToPatch } from "../schemas/unit.schema.js";
 import { ZodError } from "zod";
-import { EntityManager } from "@mikro-orm/core";
+import { Unit } from "../entities/index.js";
+import { 
+  validateId,
+  validateUnit, 
+  validateUnitToPatch
+} from "../schemas/index.js";
+import { getOrm } from "../shared/index.js";
+import { createResponse } from "../utils/createResponse.js";
 
-const em: EntityManager = orm.em.fork();
-em.getRepository(Unit);
+const getEm = async () => (await getOrm()).em;
 
-function sanitizeUnitInput(req: Request, res: Response, next: NextFunction) {
+function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     name: req.body.name,
     content: req.body.content,
@@ -39,63 +42,109 @@ function sanitizeSearchInput(req: Request) {
 }
 async function findAll(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const sanitizedQuery = sanitizeSearchInput(req);
     const units = await em.find(Unit, sanitizedQuery);
-    res.status(200).json({ message: "found all units", data: units });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(200).json(createResponse("Success", "found all units", units));
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function findOne(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const em = await getEm();
+    const id = validateId(req.params);
     const unit = await em.findOneOrFail(Unit, { id }, { populate: ["level"] });
-    res.status(200).json({ message: "found unit", data: unit });
-  } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(200).json(createResponse("Success", "found unit", unit));
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function add(req: Request, res: Response) {
   try {
+    const em = await getEm();
+    if (!req.userData?.admin) {
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to create units"));
+      return;
+    }
     const validUnit = validateUnit(req.body.sanitizedInput);
     const levelId = validUnit.level;
     const order = await em.count(Unit, { level: levelId });
     const unit = em.create(Unit, { ...validUnit, order: order + 1 });
     await em.flush();
     const createdUnit = em.getReference(Unit, unit.id);
-    res.status(201).json({ message: "unit created", data: createdUnit });
+    res
+      .status(201)
+      .json(createResponse("Success", "unit created", createdUnit));
   } catch (error: any) {
-    if (error instanceof ZodError) {
-      return res
-        .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
     }
-    res.status(500).json({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function update(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const em = await getEm();
+    if (!req.userData?.admin) {
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to update units"));
+      return;
+    }
+   
+      const id = validateId(req.params);
 
     if (isNaN(id)) {
-      return res.status(400).json({ message: "Invalid ID" });
+      res.status(422).json(createResponse("Unprocessable Entity", "Invalid ID"));
+      return;
     }
 
-    // Obtén la referencia de la unidad
     const unit = await em.findOne(Unit, id);
 
     if (!unit) {
-      return res.status(404).json({ message: "Unit not found" });
+      res.status(404).json(createResponse("Not Found", "Unit not found"));
+      return;
     }
 
     let unitUpdated;
 
     if (req.method === "PATCH") {
-      // Validar la entrada antes de procesarla
       unitUpdated = validateUnitToPatch(req.body.sanitizedInput);
 
-      // Si se proporciona un nuevo valor para "order", procesamos la actualización de los órdenes
       if (unitUpdated.order) {
         const originalOrder = unit.order;
         const newOrder = unitUpdated.order;
@@ -103,7 +152,6 @@ async function update(req: Request, res: Response) {
         if (originalOrder !== newOrder) {
           const allUnits = await em.find(Unit, {});
 
-          // Si el nuevo orden es mayor, reducimos el orden de las unidades entre los valores originales y nuevos
           if (newOrder > originalOrder) {
             allUnits.forEach((unit) => {
               if (unit.order > originalOrder && unit.order <= newOrder) {
@@ -120,27 +168,43 @@ async function update(req: Request, res: Response) {
         }
       }
     } else {
-      // Validar la entrada para otros tipos de solicitudes (PUT, por ejemplo)
       unitUpdated = validateUnit(req.body.sanitizedInput);
     }
 
-    // Asignar los nuevos valores a la unidad y guardar
     em.assign(unit, unitUpdated);
     await em.flush();
 
-    // Responder con éxito
-    res.status(200).json({ message: "Unit updated", data: unitUpdated });
+    res
+      .status(200)
+      .json(createResponse("Success", "Unit updated", unitUpdated));
   } catch (error: any) {
-    // Capturar cualquier error y devolver una respuesta 500
-    console.error(error);
-    res.status(500).json({ message: error.message });
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function remove(req: Request, res: Response) {
+  const em = await getEm();
   await em.transactional(async (em) => {
     try {
-      const id = Number.parseInt(req.params.id);
+      if (!req.userData?.admin) {
+        await em.rollback();
+        res
+          .status(403)
+          .json(createResponse("Forbidden", "You are not authorized to delete units"));
+        return;
+      }
+      const id = validateId(req.params);
       const unit = await em.findOneOrFail(Unit, { id });
       const level = unit.level;
       const order = unit.order;
@@ -155,11 +219,24 @@ async function remove(req: Request, res: Response) {
       }
 
       await em.flush();
-      res.status(204).send();
+      res
+        .status(204)
+        .json(createResponse("Success", "Unit deleted successfully."));
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
     }
   });
 }
 
-export { sanitizeUnitInput, findAll, findOne, add, update, remove };
+export { SanitizedInput, findAll, findOne, add, update, remove };

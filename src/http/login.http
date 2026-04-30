@@ -1,8 +1,39 @@
 ### LOGIN
 POST http://localhost:3000/api/login
-Content-Type: application/json 
+Content-Type: application/json
+Credentials: include
+
 
 {
-  "email": "ag3dg@gmail.com",
-  "password": "12345678"
+  "email": "sofia.ramirez@learnsphere.com",
+  "password": "Tr3n_VeloZ!99$"
 }
+###tokn
+POST http://localhost:3000/api/login
+Content-Type: application/json
+
+{
+  "email": "admin@gmail.com",
+  "password": "Goku1234"
+}
+
+###token
+GET http://localhost:3000/api/login/auth
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6IlNvZsOtYSIsInN1cm5hbWUiOiJSYW3DrXJleiIsInBhc3N3b3JkIjoiIiwiZW1haWwiOiJzb2ZpYS5yYW1pcmV6QGxlYXJuc3BoZXJlLmNvbSIsImFkbWluIjpmYWxzZSwiaWF0IjoxNzY4MDg1NzA2LCJleHAiOjE3NjgxMTQ1MDZ9.mgn6EkYksxEYYH2HnT94jDq27M-Ch7It2m3-VV4XHFs
+Content-Type: application/json
+Credentials: include
+
+### validateUser
+GET http://localhost:3000/api/login/auth
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MCwibmFtZSI6IkFkbWluIiwic3VybmFtZSI6IlVzZXIiLCJwYXNzd29yZCI6IiIsImVtYWlsIjoiYWRtaW5AZ21haWwuY29tIiwiYWRtaW4iOnRydWUsImlhdCI6MTc0MzYxNDcyNywiZXhwIjoxNzQzNjQzNTI3fQ.QuSLkws2YmxNSRmCCC5IDJyfHKzYg44JupWOzPS6TQQ
+Content-Type: application/json
+Credentials: include
+###revoke token
+
+POST http://localhost:3000/api/login/revoke-token
+Content-Type: application/json
+
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MCwibmFtZSI6IkFkbWluIiwic3VybmFtZSI6IlVzZXIiLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImFkbWluIjp0cnVlLCJpYXQiOjE3MzY0MjQzMDcsImV4cCI6MTczNjQ1MzEwN30.6lzPRy46mnJOlpEd7gxwN-c8wiNFUX6RPIrb_NuMdps"
+}
+###revoke token

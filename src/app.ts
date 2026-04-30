@@ -1,56 +1,74 @@
 import "reflect-metadata";
-import express from "express";
-import dotenv from "dotenv";
-import { orm, syncSchema } from "./shared/orm.js";
-import cors from "cors";
 import { RequestContext } from "@mikro-orm/core";
-import { userRouter } from "./routes/user.routes.js";
-import { fileRouter } from "./routes/file.routes.js";
-import { levelRouter } from "./routes/level.routes.js";
-import { subsPurchaseRecordRouter } from "./routes/subsPurchaseRecord.routes.js";
-import { subscriptionRouter } from "./routes/subscription.routes.js";
-import { unitRouter } from "./routes/unit.routes.js";
-import { loginRouter } from "./routes/login.routes.js";
-import { courseRouter } from "./routes/course.routes.js";
-import { coursePurchaseRecordRouter } from "./routes/coursePurchaseRecord.routes.js";
-import { topicRouter } from "./routes/topic.routes.js";
+import cors from "cors";
+import dotenv from "dotenv";
+import express, { Express } from "express";
+import {
+  courseRouter,
+  coursePurchaseRecordRouter,
+  levelRouter,
+  loginRouter,
+  subsPurchaseRecordRouter,
+  subscriptionRouter,
+  topicRouter,
+  unitRouter,
+  userRouter
+} from "./routes/index.js";
+import { getOrm, syncSchema } from "./shared/index.js";
+import { e2eRouter } from "../tests/E2E/e2e.routes.js";
+dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
 
-dotenv.config();
+const { NODE_ENV, PUBLIC_URL, PORT, URL_FE, DB_HOST, DB_NAME } = process.env;
+const app: Express = express();
 
-const app = express();
+const corsOptions = {
+  origin: URL_FE,
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  credentials: true,
+};
 
-const PORT = 3000; 
+app.use(cors(corsOptions));
 
-//app.use(cors());
+const startServer = async () => {
+  const orm = await getOrm();
+  const em = orm.em;
+  app.use((req, res, next) => {
+    RequestContext.create(em, next);
+  });
+  
+  await syncSchema();
 
-app.use((req, res, next) => {
-  RequestContext.create(orm.em, next);
-});
+  app.use(express.json());
 
-// antes de las rutas y middlewares de negocio
+  app.use("/api/subscriptions", subscriptionRouter);
+  app.use("/api/subsPurchaseRecords", subsPurchaseRecordRouter);
+  app.use("/api/users", userRouter);
+  app.use("/api/levels", levelRouter);
+  app.use("/api/units", unitRouter);
+  app.use("/api/login", loginRouter);
+  app.use("/api/courses", courseRouter);
+  app.use("/api/coursePurchaseRecords", coursePurchaseRecordRouter);
+  app.use("/api/topics", topicRouter);
 
-//Middlewares
-app.use(express.json());
+  if (NODE_ENV === "testE2E") {
+    app.use("/api/e2e", e2eRouter);
+  }
 
-app.use("/api/subscriptions", subscriptionRouter);
-app.use("/api/subsPurchaseRecords", subsPurchaseRecordRouter);
+  app.use((_, res) => {
+    res.status(404).send({ message: "Resource not found" });
+  });
 
-app.use("/api/users", userRouter);
-app.use("/api/levels", levelRouter);
-app.use("/api/files", fileRouter);
-app.use("/api/units", unitRouter);
-app.use("/api/login", loginRouter);
-app.use("/api/courses", courseRouter);
-app.use("/api/coursePurchaseRecords", coursePurchaseRecordRouter);
-app.use("/api/topics", topicRouter);
+  app.listen(PORT, () => {
+    console.log(
+      `Server running on  ${PUBLIC_URL}, NODE_ENV: ${NODE_ENV}, URL_FE: ${URL_FE}, PORT: ${PORT}, DB_HOST: ${DB_HOST}, DB_NAME: ${DB_NAME}`
+    );
+  });
+};
+try {
+  await startServer();
+} catch (error: any) {
+  console.error("Failed to start server:", error);
+  process.exit(1);
+}
 
-app.use((_, res) => {
-  res.status(404).send({ message: "Resource not found" });
-});
-
-await syncSchema();
-
-//Server
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
+export default app;

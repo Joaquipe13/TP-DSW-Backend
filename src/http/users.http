@@ -10,7 +10,7 @@ Content-Type: application/json
   "dni": "56748981",
   "name": "Tirone",
   "surname": "Gonzales",
-  "email": "ag3dg@gmail.com",
+  "email": "joaquinfds13@gmail.com",
   "password": "12345678",
   "admin": false
 }
@@ -30,6 +30,11 @@ Content-Type: application/json
   "email": "osbmth@gmail.com"
 }
 
+###confirmUser
+GET http://localhost:3000/api/users/confirm
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiSm9hcXXDrW4gQ2FybG9zIiwic3VybmFtZSI6IkZlcm5hbmRleiBEYSBTaWx2YSIsInBhc3N3b3JkIjoiJGFyZ29uMmlkJHY9MTkkbT02NTUzNix0PTMscD00JEl1V0U4OWdXdTNnaWU3NkxFVXRSL1EkcTZoMENRY05WZGhmQVVoRWNraGpYdld1S0VzeVNUQVBKS1ZvalcvVEhvTSIsImVtYWlsIjoiam9hcXVpbmZkczEzQGdtYWlsLmNvbSIsImFkbWluIjpmYWxzZSwiaWF0IjoxNzQwNjExMTg4LCJleHAiOjE3NDA2Mzk5ODh9.y337ASNegWDFkAiUJAGApX9_LFEUIsQyDbo0fH17oLk
+Content-Type: application/json
+Credentials: include
 
 ### Post a user
 # @name createUserToDelete

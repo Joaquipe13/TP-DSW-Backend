@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
     "incremental": true,
-    "target": "es2020",
-    "module": "ES2022",
-    "moduleResolution": "bundler",
+    "noEmit": false,
+    "target": "ESNext",
+    "module": "Node16",
+    "moduleResolution": "node16",
     "sourceMap": true,
     "outDir": "./dist",
     "esModuleInterop": true,
@@ -12,8 +13,11 @@
     "alwaysStrict": true,
     "skipLibCheck": true,
     "emitDecoratorMetadata": true,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "noImplicitAny": false,
+    "types": ["vitest/globals"]
+    //"allowImportingTsExtensions": true
   },
-  "include": ["src/**/*", "**/*.ts", "dist/index.js"],
+  "include": ["src/**/*", "tests/**/*.ts", "tests/setup.ts"],
   "exclude": ["node_modules"]
 }

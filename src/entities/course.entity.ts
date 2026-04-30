@@ -6,10 +6,8 @@ import {
   Collection,
   DateTimeType,
   ManyToMany,
-  Rel,
-  ManyToOne,
 } from "@mikro-orm/core";
-import { BaseEntity } from "../shared/baseEntity.entity.js";
+import { BaseEntity } from "./baseEntity.entity.js";
 import { CoursePurchaseRecord } from "./coursePurchaseRecord.entity.js";
 import { Topic } from "./topic.entity.js";
 import { Level } from "./level.entity.js";
@@ -18,12 +16,12 @@ export class Course extends BaseEntity {
   @Property({ nullable: false, default: false })
   isActive!: boolean;
 
-  @Property({ nullable: false, unique: true })
+  @Property({ nullable: false, unique: true, length: 50 })
   title!: string;
-  /* 
-    @Property({nullable: false, unique: true})
-    description!: string
- */
+
+  @Property({ nullable: false })
+  resume!: string;
+
   @Property({ type: DateTimeType, nullable: false })
   createdAt = new Date();
 

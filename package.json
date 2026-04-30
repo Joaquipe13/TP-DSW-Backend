@@ -6,30 +6,64 @@
   "main": "app.js",
   "scripts": {
     "build": "tsc -p ./tsconfig.json",
-    "dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/app.js\""
+    "dev": "cross-env NODE_ENV=development tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/src/app.js\"",
+    "start": "cross-env NODE_ENV=production node ./dist/src/app.js",
+    "test": "cross-env NODE_ENV=test vitest --sequence.setupFiles=./tests/setup.ts",
+    "test:watch": "cross-env NODE_ENV=test vitest --watch",
+    "test:coverage": "cross-env NODE_ENV=test vitest --coverage",
+    "test:e2e": "cross-env NODE_ENV=testE2E tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/src/app.js\"",
+    "migration:create": "mikro-orm migration:create"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "vitest": {
+    "testTimeout": 300000,
+    "globals": true,
+    "environment": "node",
+    "setupFiles": "./tests/setup.ts",
+    "transformMode": {
+      "web": [
+        "/.[tj]sx$/"
+      ]
+    },
+    "esbuild": {
+      "target": "esnext"
+    }
+  },
   "devDependencies": {
+    "@mikro-orm/seeder": "5.8.10",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
-    "@types/node": "22.10.2",
-    "ts-node": "^10.9.2",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "22.10.10",
+    "@types/nodemailer": "^6.4.17",
+    "@types/supertest": "^6.0.2",
+    "@vitest/spy": "^3.0.4",
+    "cross-env": "^7.0.3",
+    "depcheck": "^1.4.7",
+    "sqlite3": "^5.1.7",
+    "supertest": "6.3.4",
     "tsc-watch": "6.2.1",
-    "typescript": "5.7.2",
+    "typescript": "5.7.3",
+    "vitest": "^3.0.4",
     "zod": "^3.24.1"
   },
   "dependencies": {
+    "@mikro-orm/cli": "5.8.10",
     "@mikro-orm/core": "5.8.10",
+    "@mikro-orm/migrations": "5.8.10",
     "@mikro-orm/mysql": "5.8.10",
     "@mikro-orm/sql-highlighter": "1.0.1",
+    "@mikro-orm/sqlite": "5.8.10",
     "argon2": "^0.41.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "dsw-tp": "file:",
     "express": "^5.0.1",
-    "mysql2": "^3.12.0",
+    "jsonwebtoken": "^9.0.2",
+    "nodemailer": "^6.10.0",
+    "pnpm": "^9.15.9",
     "reflect-metadata": "^0.2.2"
   }
 }

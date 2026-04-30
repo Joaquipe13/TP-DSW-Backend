@@ -1,16 +1,16 @@
 import { Request, Response, NextFunction } from "express";
-import { Level } from "../entities/level.entity.js";
-import { orm } from "../shared/orm.js";
-import {
-  validateLevel,
-  validateLevelToPatch,
-} from "../schemas/level.schema.js";
 import { ZodError } from "zod";
-import { EntityManager } from "@mikro-orm/core";
+import { Level } from "../entities/index.js";
+import {
+  validateId,
+  validateLevel, 
+  validateLevelToPatch
+} from "../schemas/index.js";
+import { getOrm } from "../shared/index.js";
+import { createResponse } from "../utils/createResponse.js";
 
-const em: EntityManager = orm.em.fork();
-em.getRepository(Level);
-function sanitizeLevelInput(req: Request, res: Response, next: NextFunction) {
+const getEm = async () => (await getOrm()).em;
+function SanitizedInput(req: Request, res: Response, next: NextFunction) {
   req.body.sanitizedInput = {
     name: req.body.name,
     description: req.body.description,
@@ -42,19 +42,27 @@ function sanitizeSearchInput(req: Request) {
 
 async function findAll(req: Request, res: Response) {
   try {
+    const em = await getEm();
     const sanitizedQuery = sanitizeSearchInput(req);
     const levels = await em.find(Level, sanitizedQuery, {
       populate: ["units"],
     });
-    res.json({ message: "found all levels", data: levels });
-  } catch (error: any) {
-    res.status(500).json({ message: "Error finding Levels" });
+    res.json(createResponse("Success", "found all levels", levels));
+  }catch (error: any) {
+    if (error instanceof ZodError) {
+      res
+        .status(422)
+        .json(createResponse("Unprocessable Entity",  error.issues.map((issue) => issue.message).join(", ")));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function findOne(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const em = await getEm();
+    const id = validateId(req.params);
     const level = await em.findOneOrFail(
       Level,
       { id },
@@ -63,33 +71,66 @@ async function findOne(req: Request, res: Response) {
     if (level.units) {
       level.units.getItems().sort((a, b) => a.order - b.order);
     }
-    res.status(200).json({ message: "found level", data: level });
-  } catch (error: any) {
-    res.status(500).send({ message: error.message });
+    res.status(200).json(createResponse("Success", "found level", level));
+  }catch (error: any) {
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
+    }
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 async function add(req: Request, res: Response) {
   try {
+    const em = await getEm();
+    if (!req.userData?.admin){
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to create levels"));
+      return;
+    }
     const validLevel = validateLevel(req.body.sanitizedInput);
     const courseId = validLevel.course;
     const order = await em.count(Level, { course: courseId });
     const level = em.create(Level, { ...validLevel, order: order + 1 });
     await em.flush();
     const createdLevel = em.getReference(Level, level.id);
-    res.status(201).json({ message: "Level created", data: { createdLevel } });
+    res
+      .status(201)
+      .json(createResponse("Success", "Level created", createdLevel));
   } catch (error: any) {
-    if (error instanceof ZodError) {
-      return res
-        .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
     }
-    res.status(500).send({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function update(req: Request, res: Response) {
   try {
-    const id = Number.parseInt(req.params.id);
+    const em = await getEm();
+    if (!req.userData?.admin){
+      res
+        .status(403)
+        .json(createResponse("Forbidden", "You are not authorized to update levels"));
+      return;
+    };
+    const id = validateId(req.params);
     const level = em.getReference(Level, id);
     let levelUpdated;
 
@@ -120,21 +161,35 @@ async function update(req: Request, res: Response) {
     }
     em.assign(level, levelUpdated);
     await em.flush();
-    res.status(200).json({ message: "Level updated", data: level });
+    res.status(200).json(createResponse("Success", "Level updated", level));
   } catch (error: any) {
-    if (error instanceof ZodError) {
-      return res
-        .status(400)
-        .json(error.issues.map((issue) => ({ message: issue.message })));
+    if (error instanceof ZodError || error.name === "ZodError") {
+      res
+        .status(422)
+        .json(createResponse(
+            "Unprocessable Entity",
+            error.issues
+              ? error.issues.map((issue: any) => issue.message).join(", ")
+              : "Validation error"
+          ));
+      return;
     }
-    res.status(500).send({ message: error.message });
+    res.status(500).json(createResponse("Error", error.message));
   }
 }
 
 async function remove(req: Request, res: Response) {
+  const em = await getEm();
   await em.transactional(async (em) => {
     try {
-      const id = Number.parseInt(req.params.id);
+      if (!req.userData?.admin){
+        await em.rollback();
+        res
+          .status(403)
+          .json(createResponse("Forbidden", "You are not authorized to remove levels"));
+        return;
+      }
+      const id = validateId(req.params);
       const level = await em.findOneOrFail(Level, { id });
       const course = level.course;
       const order = level.order;
@@ -151,9 +206,20 @@ async function remove(req: Request, res: Response) {
       await em.flush();
       res.status(204).send();
     } catch (error: any) {
-      res.status(500).json({ message: error.message });
+      if (error instanceof ZodError || error.name === "ZodError") {
+        res
+          .status(422)
+          .json(createResponse(
+              "Unprocessable Entity",
+              error.issues
+                ? error.issues.map((issue: any) => issue.message).join(", ")
+                : "Validation error"
+            ));
+        return;
+      }
+      res.status(500).json(createResponse("Error", error.message));
     }
   });
 }
 
-export { sanitizeLevelInput, findAll, findOne, add, update, remove };
+export { SanitizedInput, findAll, findOne, add, update, remove };
